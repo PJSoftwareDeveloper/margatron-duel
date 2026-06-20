@@ -3,7 +3,7 @@ import { useAppVersion } from '@/Composables/useAppVersion';
 import { router } from '@inertiajs/vue3';
 
 const props = withDefaults(defineProps<{
-    active?: 'game' | 'rankings';
+    active?: 'game' | 'rankings' | 'achievements';
 }>(), {
     active: 'game',
 });
@@ -42,7 +42,14 @@ function logout(): void {
             >
                 RANKINGI
             </button>
-            <button class="nav-btn" type="button" disabled>OSIĄGNIĘCIA</button>
+            <button
+                class="nav-btn"
+                :class="{ active: props.active === 'achievements' }"
+                type="button"
+                @click="visit('/achievements')"
+            >
+                OSIĄGNIĘCIA
+            </button>
             <button class="nav-btn" type="button" @click="emit('settings')">KONFIGURACJA</button>
             <button class="nav-btn logout" type="button" @click="logout">WYLOGUJ</button>
         </nav>

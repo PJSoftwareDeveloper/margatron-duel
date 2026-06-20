@@ -17,9 +17,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'pa',
     'pa_max',
     'pa_regenerated_at',
+    'played_seconds',
+    'last_seen_at',
     'vitality',
     'strength',
     'luck',
+    'vitality_points_assigned',
+    'strength_points_assigned',
+    'luck_points_assigned',
     'attribute_points',
     'hp',
     'hp_max',
@@ -30,6 +35,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'crit_power',
     'dodge',
     'stun',
+    'monsters_killed',
+    'unique_items_found',
+    'heroic_items_found',
+    'legendary_items_found',
     'current_map_id',
     'stage_progress',
     'inventory',
@@ -62,6 +71,7 @@ class GameProfile extends Model
             'inventory' => 'array',
             'equipped' => 'array',
             'pa_regenerated_at' => 'datetime',
+            'last_seen_at' => 'datetime',
         ];
     }
 }

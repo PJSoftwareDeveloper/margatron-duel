@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Game\AchievementController;
 use App\Http\Controllers\Game\GameActionController;
 use App\Http\Controllers\Game\GameController;
 use App\Http\Controllers\Game\RankingController;
@@ -31,6 +32,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/game', [GameController::class, 'show'])->name('game.show');
     Route::get('/game/state', [GameController::class, 'state'])->name('game.state');
     Route::get('/rankings', [RankingController::class, 'index'])->name('rankings.index');
+    Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
 
     Route::prefix('/game/actions')->name('game.actions.')->group(function (): void {
         Route::post('/battle/stage', [GameActionController::class, 'stageBattle'])->name('battle.stage');

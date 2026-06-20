@@ -151,6 +151,24 @@ export type PlayerRanking = {
     activeSort: 'level';
 };
 
+export type AchievementEntry = {
+    id: string;
+    label: string;
+    icon: string;
+    value: number;
+    target: number;
+    percent: number;
+    progressLabel: string;
+    completed: boolean;
+};
+
+export type PlayerAchievements = {
+    entries: AchievementEntry[];
+    completedCount: number;
+    totalCount: number;
+    overallPercent: number;
+};
+
 export type BattleLog = {
     text: string;
     type: string;

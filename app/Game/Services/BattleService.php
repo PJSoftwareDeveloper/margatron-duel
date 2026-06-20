@@ -3,6 +3,7 @@
 namespace App\Game\Services;
 
 use App\Game\Enums\ArenaDifficulty;
+use App\Game\Enums\ItemRarity;
 use App\Game\Enums\LocationType;
 use App\Game\Repositories\StaticGameCatalogRepository;
 use App\Models\GameProfile;
@@ -182,11 +183,16 @@ final readonly class BattleService
         $profile->forceFill([
             'gold' => $profile->gold + $enemy['gold'],
             'hp' => $result['playerHp'],
+            'monsters_killed' => $profile->monsters_killed + 1,
         ])->save();
 
         $levelResult = $this->profiles->addExperience($profile, (int) $enemy['exp']);
         $drop = $this->items->rollForDrop((int) $enemy['level'], (int) $profile->luck, $arenaDifficulty);
         $dropAdded = $drop ? $this->inventory->addItem($profile, $drop) : false;
+
+        if ($dropAdded && $drop) {
+            $this->recordItemFound($profile, $drop);
+        }
 
         $result['rewards']['level'] = $levelResult;
         $result['rewards']['drop'] = $drop;
@@ -211,6 +217,21 @@ final readonly class BattleService
         $profile->hp = max(1, (int) floor($profile->hp_max * 0.3));
         $profile->save();
         $result['log'][] = ['text' => 'Zostałeś pokonany!', 'type' => 'defeat'];
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     */
+    private function recordItemFound(GameProfile $profile, array $item): void
+    {
+        $rarity = ItemRarity::tryFrom((string) ($item['rarity'] ?? ''));
+
+        match ($rarity) {
+            ItemRarity::Unique => $profile->increment('unique_items_found'),
+            ItemRarity::Heroic => $profile->increment('heroic_items_found'),
+            ItemRarity::Legendary => $profile->increment('legendary_items_found'),
+            default => null,
+        };
     }
 
     private function spendPa(GameProfile $profile, int $amount): void

@@ -14,6 +14,8 @@ final readonly class GameProfileService
 
     public const int ACTION_POINTS_PER_LEVEL = 5;
 
+    public const int PLAY_SESSION_GRACE_SECONDS = 300;
+
     /**
      * @return array<string, mixed>
      */
@@ -29,9 +31,14 @@ final readonly class GameProfileService
             'pa' => $actionPointRegenerationLimit,
             'pa_max' => $actionPointRegenerationLimit,
             'pa_regenerated_at' => now(),
+            'played_seconds' => 0,
+            'last_seen_at' => now(),
             'vitality' => 5,
             'strength' => 5,
             'luck' => 5,
+            'vitality_points_assigned' => 0,
+            'strength_points_assigned' => 0,
+            'luck_points_assigned' => 0,
             'attribute_points' => 0,
             'hp' => 50,
             'hp_max' => 50,
@@ -42,6 +49,10 @@ final readonly class GameProfileService
             'crit_power' => 150,
             'dodge' => 3,
             'stun' => 0,
+            'monsters_killed' => 0,
+            'unique_items_found' => 0,
+            'heroic_items_found' => 0,
+            'legendary_items_found' => 0,
             'current_map_id' => 1,
             'stage_progress' => [],
             'inventory' => array_fill(0, self::INVENTORY_SIZE, null),
@@ -97,7 +108,28 @@ final readonly class GameProfileService
             self::defaults(),
         );
 
-        return $this->recalculate($this->regenerateActionPoints($profile));
+        return $this->recalculate($this->regenerateActionPoints($this->recordActivity($profile)));
+    }
+
+    public function recordActivity(GameProfile $profile, ?Carbon $now = null): GameProfile
+    {
+        $now ??= now();
+        $lastSeenAt = $profile->last_seen_at;
+        $secondsToAdd = 0;
+
+        if ($lastSeenAt) {
+            $secondsToAdd = min(
+                self::PLAY_SESSION_GRACE_SECONDS,
+                max(0, $now->getTimestamp() - $lastSeenAt->getTimestamp()),
+            );
+        }
+
+        $profile->forceFill([
+            'played_seconds' => max(0, (int) $profile->played_seconds) + $secondsToAdd,
+            'last_seen_at' => $now,
+        ])->save();
+
+        return $profile->refresh();
     }
 
     public function regenerateActionPoints(GameProfile $profile, ?Carbon $now = null): GameProfile
@@ -219,8 +251,11 @@ final readonly class GameProfileService
         }
 
         DB::transaction(function () use ($profile, $attribute): void {
+            $assignedColumn = $attribute->value.'_points_assigned';
+
             $profile->attribute_points--;
             $profile->{$attribute->value}++;
+            $profile->{$assignedColumn} = ((int) $profile->{$assignedColumn}) + 1;
 
             if ($attribute === PlayerAttribute::Vitality) {
                 $profile->hp += 10;
