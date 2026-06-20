@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Game\Services\GameProfileService;
 use App\Models\GameProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -65,10 +67,17 @@ final class GameFlowTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user)->get('/game')->assertOk();
 
-        $response = $this->postJson('/game/actions/battle/stage', [
-            'locationId' => 'ithan-hunters-cave',
-            'stage' => 1,
-        ]);
+        $spentAt = Carbon::parse('2026-06-20 13:37:00');
+        Carbon::setTestNow($spentAt);
+
+        try {
+            $response = $this->postJson('/game/actions/battle/stage', [
+                'locationId' => 'ithan-hunters-cave',
+                'stage' => 1,
+            ]);
+        } finally {
+            Carbon::setTestNow();
+        }
 
         $response
             ->assertOk()
@@ -78,13 +87,16 @@ final class GameFlowTest extends TestCase
                 'game' => ['user', 'currentMap', 'worldMaps', 'shops'],
             ]);
 
-        $this->assertSame(19, GameProfile::query()->whereBelongsTo($user)->value('pa'));
+        $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
+
+        $this->assertSame(19, $profile->pa);
+        $this->assertTrue($profile->pa_regenerated_at->equalTo($spentAt));
     }
 
     public function test_action_points_regenerate_over_time(): void
     {
         config()->set('game.action_points.regeneration_seconds', 60);
-        config()->set('game.action_points.max', 20);
+        config()->set('game.action_points.regeneration_limit', 20);
 
         $user = User::factory()->create();
         GameProfile::factory()->for($user)->create([
@@ -99,15 +111,16 @@ final class GameFlowTest extends TestCase
             ->assertJsonPath('data.user.pa', 12)
             ->assertJsonPath('data.user.paMax', 20)
             ->assertJsonPath('data.user.paLimit', 20)
+            ->assertJsonPath('data.user.paRegenerationLimit', 20)
             ->assertJsonPath('data.user.paRegenerationSeconds', 60);
 
         $this->assertSame(12, GameProfile::query()->whereBelongsTo($user)->value('pa'));
     }
 
-    public function test_action_points_never_regenerate_past_configured_limit(): void
+    public function test_action_points_regeneration_stops_at_configured_limit(): void
     {
         config()->set('game.action_points.regeneration_seconds', 60);
-        config()->set('game.action_points.max', 20);
+        config()->set('game.action_points.regeneration_limit', 20);
 
         $user = User::factory()->create();
         GameProfile::factory()->for($user)->create([
@@ -120,11 +133,83 @@ final class GameFlowTest extends TestCase
             ->getJson('/game/state')
             ->assertOk()
             ->assertJsonPath('data.user.pa', 20)
-            ->assertJsonPath('data.user.paMax', 20);
+            ->assertJsonPath('data.user.paMax', 50)
+            ->assertJsonPath('data.user.paRegeneratesAt', null);
 
         $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
 
         $this->assertSame(20, $profile->pa);
-        $this->assertSame(20, $profile->pa_max);
+        $this->assertSame(50, $profile->pa_max);
+    }
+
+    public function test_action_points_above_regeneration_limit_are_not_clamped(): void
+    {
+        config()->set('game.action_points.regeneration_seconds', 60);
+        config()->set('game.action_points.regeneration_limit', 20);
+
+        $user = User::factory()->create();
+        GameProfile::factory()->for($user)->create([
+            'pa' => 24,
+            'pa_max' => 20,
+            'pa_regenerated_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/game/state')
+            ->assertOk()
+            ->assertJsonPath('data.user.pa', 24)
+            ->assertJsonPath('data.user.paRegeneratesAt', null);
+
+        $this->assertSame(24, GameProfile::query()->whereBelongsTo($user)->value('pa'));
+    }
+
+    public function test_level_up_can_raise_action_points_above_regeneration_limit(): void
+    {
+        config()->set('game.action_points.regeneration_limit', 20);
+
+        $profile = GameProfile::factory()->create([
+            'pa' => 19,
+            'pa_max' => 20,
+            'exp' => 0,
+            'exp_max' => 20,
+        ]);
+
+        app(GameProfileService::class)->addExperience($profile, 20);
+
+        $this->assertSame(24, $profile->refresh()->pa);
+    }
+
+    public function test_pa_potion_can_raise_action_points_above_regeneration_limit(): void
+    {
+        config()->set('game.action_points.regeneration_limit', 20);
+
+        $user = User::factory()->create();
+        GameProfile::factory()->for($user)->create([
+            'pa' => 19,
+            'pa_max' => 20,
+            'inventory' => [
+                [
+                    'id' => 'test-pa-potion',
+                    'name' => 'Testowa mikstura PA',
+                    'type' => 'potion',
+                    'effect' => 'pa',
+                    'effectValue' => 5,
+                    'price' => 0,
+                    'quantity' => 1,
+                ],
+                ...array_fill(0, GameProfileService::INVENTORY_SIZE - 1, null),
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/game/actions/inventory/use', ['index' => 0])
+            ->assertOk()
+            ->assertJsonPath('data.user.pa', 24)
+            ->assertJsonPath('data.user.paRegeneratesAt', null);
+
+        $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
+
+        $this->assertSame(24, $profile->pa);
+        $this->assertNull($profile->inventory[0]);
     }
 }

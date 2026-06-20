@@ -37,6 +37,7 @@ export type Player = {
     pa: number;
     paMax: number;
     paLimit: number;
+    paRegenerationLimit: number;
     paRegenerationSeconds: number;
     paRegeneratesAt: string | null;
     vitality: number;

@@ -80,7 +80,7 @@ async function refreshGameState(): Promise<void> {
 function scheduleActionPointRefresh(): void {
     clearActionPointRefresh();
 
-    if (isGameViewDisposed || user.value.pa >= user.value.paMax) {
+    if (isGameViewDisposed || user.value.pa >= user.value.paRegenerationLimit) {
         return;
     }
 
@@ -395,7 +395,7 @@ function disposeGameView(): void {
 }
 
 watch(
-    () => [user.value.pa, user.value.paMax, user.value.paRegenerationSeconds, user.value.paRegeneratesAt],
+    () => [user.value.pa, user.value.paRegenerationLimit, user.value.paRegenerationSeconds, user.value.paRegeneratesAt],
     scheduleActionPointRefresh,
     { immediate: true },
 );

@@ -12,20 +12,22 @@ final readonly class GameProfileService
 {
     public const int INVENTORY_SIZE = 15;
 
+    public const int ACTION_POINTS_PER_LEVEL = 5;
+
     /**
      * @return array<string, mixed>
      */
     public static function defaults(): array
     {
-        $actionPointMaximum = self::actionPointMaximum();
+        $actionPointRegenerationLimit = self::actionPointRegenerationLimit();
 
         return [
             'level' => 1,
             'exp' => 0,
             'exp_max' => self::expForNextLevel(1),
             'gold' => 100,
-            'pa' => $actionPointMaximum,
-            'pa_max' => $actionPointMaximum,
+            'pa' => $actionPointRegenerationLimit,
+            'pa_max' => $actionPointRegenerationLimit,
             'pa_regenerated_at' => now(),
             'vitality' => 5,
             'strength' => 5,
@@ -61,9 +63,9 @@ final readonly class GameProfileService
         return max(1, (int) config('game.action_points.regeneration_seconds', 60));
     }
 
-    public static function actionPointMaximum(): int
+    public static function actionPointRegenerationLimit(): int
     {
-        return max(0, (int) config('game.action_points.max', 20));
+        return max(0, (int) config('game.action_points.regeneration_limit', config('game.action_points.max', 20)));
     }
 
     public function ensureFor(User $user): GameProfile
@@ -77,33 +79,17 @@ final readonly class GameProfileService
         return $this->recalculate($this->regenerateActionPoints($profile));
     }
 
-    public function actionPointCap(GameProfile $profile): int
-    {
-        return min(max(0, (int) $profile->pa_max), self::actionPointMaximum());
-    }
-
     public function regenerateActionPoints(GameProfile $profile, ?Carbon $now = null): GameProfile
     {
         $now ??= now();
         $interval = self::actionPointRegenerationSeconds();
-        $cap = $this->actionPointCap($profile);
-        $currentPa = min(max(0, (int) $profile->pa), $cap);
+        $regenerationLimit = self::actionPointRegenerationLimit();
+        $currentPa = max(0, (int) $profile->pa);
         $lastRegeneratedAt = $profile->pa_regenerated_at ?? $now;
 
-        if ($cap <= 0) {
+        if ($currentPa >= $regenerationLimit) {
             $profile->forceFill([
-                'pa' => 0,
-                'pa_max' => 0,
-                'pa_regenerated_at' => $now,
-            ])->save();
-
-            return $profile->refresh();
-        }
-
-        if ($currentPa >= $cap) {
-            $profile->forceFill([
-                'pa' => $cap,
-                'pa_max' => $cap,
+                'pa' => $currentPa,
                 'pa_regenerated_at' => $now,
             ])->save();
 
@@ -116,22 +102,20 @@ final readonly class GameProfileService
         if ($pointsToRestore <= 0) {
             $profile->forceFill([
                 'pa' => $currentPa,
-                'pa_max' => $cap,
                 'pa_regenerated_at' => $lastRegeneratedAt,
             ])->save();
 
             return $profile->refresh();
         }
 
-        $newPa = min($cap, $currentPa + $pointsToRestore);
+        $newPa = min($regenerationLimit, $currentPa + $pointsToRestore);
         $restoredPoints = $newPa - $currentPa;
-        $newRegeneratedAt = $newPa >= $cap
+        $newRegeneratedAt = $newPa >= $regenerationLimit
             ? $now
             : $lastRegeneratedAt->copy()->addSeconds($restoredPoints * $interval);
 
         $profile->forceFill([
             'pa' => $newPa,
-            'pa_max' => $cap,
             'pa_regenerated_at' => $newRegeneratedAt,
         ])->save();
 
@@ -185,15 +169,14 @@ final readonly class GameProfileService
             $levelsGained++;
             $profile->exp_max = self::expForNextLevel($profile->level);
             $profile->attribute_points += 2;
-            $profile->pa_max = min(self::actionPointMaximum(), $profile->pa_max + 5);
-            $profile->pa = $profile->pa_max;
-            $profile->pa_regenerated_at = now();
+            $profile->pa += self::ACTION_POINTS_PER_LEVEL;
         }
 
         $profile->exp = $currentExp;
 
         if ($levelsGained > 0) {
             $profile->hp = 999_999;
+            $profile->pa_regenerated_at = now();
         }
 
         $profile->save();

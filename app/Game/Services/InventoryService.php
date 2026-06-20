@@ -210,13 +210,19 @@ final readonly class InventoryService
 
         match ($effect['type'] ?? null) {
             'heal' => $profile->hp = min($profile->hp_max, $profile->hp + $value),
-            'pa' => $profile->pa = min($profile->pa_max, $profile->pa + $value),
+            'pa' => $this->restoreActionPoints($profile, $value),
             'buff_strength' => $profile->strength += $value,
             'buff_crit' => $profile->crit_chance += $value,
             'buff_armor' => $profile->armor += $value,
             'buff_all' => $this->applyAllBuff($profile, $value),
             default => null,
         };
+    }
+
+    private function restoreActionPoints(GameProfile $profile, int $value): void
+    {
+        $profile->pa += max(0, $value);
+        $profile->pa_regenerated_at = now();
     }
 
     private function applyAllBuff(GameProfile $profile, int $value): void

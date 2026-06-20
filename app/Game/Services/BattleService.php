@@ -220,6 +220,7 @@ final readonly class BattleService
         }
 
         $profile->pa -= $amount;
+        $profile->pa_regenerated_at = now();
         $profile->save();
     }
 
