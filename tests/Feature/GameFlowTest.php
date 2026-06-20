@@ -2,11 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Events\ActionPointsChanged;
+use App\Game\Services\ActionPointRegenerationScheduler;
 use App\Game\Services\GameProfileService;
+use App\Jobs\RegenerateActionPoints;
 use App\Models\GameProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -115,6 +120,56 @@ final class GameFlowTest extends TestCase
             ->assertJsonPath('data.user.paRegenerationSeconds', 60);
 
         $this->assertSame(12, GameProfile::query()->whereBelongsTo($user)->value('pa'));
+    }
+
+    public function test_action_point_regeneration_job_is_queued_for_profiles_below_limit(): void
+    {
+        config()->set('queue.default', 'redis');
+        config()->set('game.action_points.regeneration_seconds', 60);
+        config()->set('game.action_points.regeneration_limit', 20);
+        Queue::fake();
+
+        $profile = GameProfile::factory()->create([
+            'pa' => 19,
+            'pa_max' => 20,
+            'pa_regenerated_at' => now(),
+        ]);
+
+        app(ActionPointRegenerationScheduler::class)->schedule($profile);
+
+        Queue::assertPushedOn(
+            'action-points',
+            RegenerateActionPoints::class,
+            fn (RegenerateActionPoints $job): bool => $job->profileId === $profile->id,
+        );
+    }
+
+    public function test_queued_action_point_regeneration_broadcasts_restored_points(): void
+    {
+        config()->set('game.action_points.regeneration_seconds', 60);
+        config()->set('game.action_points.regeneration_limit', 20);
+        Event::fake([ActionPointsChanged::class]);
+
+        $profile = GameProfile::factory()->create([
+            'pa' => 19,
+            'pa_max' => 20,
+            'pa_regenerated_at' => now()->subSeconds(60),
+        ]);
+
+        (new RegenerateActionPoints($profile->id))->handle(
+            app(GameProfileService::class),
+            app(ActionPointRegenerationScheduler::class),
+        );
+
+        $profile->refresh();
+
+        $this->assertSame(20, $profile->pa);
+        Event::assertDispatched(
+            ActionPointsChanged::class,
+            fn (ActionPointsChanged $event): bool => $event->userId === $profile->user_id
+                && $event->actionPoints['pa'] === 20
+                && $event->actionPoints['paRegeneratesAt'] === null,
+        );
     }
 
     public function test_action_points_regeneration_stops_at_configured_limit(): void

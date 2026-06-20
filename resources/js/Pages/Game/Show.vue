@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { echo } from '@/echo';
 import type { AxiosError } from 'axios';
-import type { BattleResult, GameSnapshot, Item, Location, Stage } from '@/types/game';
+import type { ActionPointsChangedEvent, ActionPointState, BattleResult, GameSnapshot, Item, Location, Stage } from '@/types/game';
 
 type Resource<T> = T | { data: T };
 type GameView = 'map' | 'battleSelection' | 'arena' | 'battle' | 'shop' | 'rest' | 'worldMap';
@@ -29,8 +30,12 @@ const tooltipX = ref(0);
 const tooltipY = ref(0);
 const logScroll = ref<HTMLElement | null>(null);
 const equipmentSlots = ['weapon', 'armor', 'accessory'] as const;
+const actionPointFlash = ref(false);
 let actionPointRefreshTimer: number | undefined;
+let actionPointFlashTimer: number | undefined;
 let isGameViewDisposed = false;
+const actionPointChannel = `users.${game.value.user.id}`;
+const actionPointFallbackGraceMs = 2000;
 
 const user = computed(() => game.value.user);
 const currentMap = computed(() => game.value.currentMap);
@@ -64,9 +69,16 @@ function clearActionPointRefresh(): void {
     }
 }
 
+function clearActionPointFlash(): void {
+    if (actionPointFlashTimer !== undefined) {
+        window.clearTimeout(actionPointFlashTimer);
+        actionPointFlashTimer = undefined;
+    }
+}
+
 function actionPointRefreshDelay(): number {
     if (user.value.paRegeneratesAt) {
-        return Math.max(250, Date.parse(user.value.paRegeneratesAt) - Date.now());
+        return Math.max(250, Date.parse(user.value.paRegeneratesAt) - Date.now() + actionPointFallbackGraceMs);
     }
 
     return Math.max(1, user.value.paRegenerationSeconds) * 1000;
@@ -93,6 +105,34 @@ function scheduleActionPointRefresh(): void {
             }
         }
     }, actionPointRefreshDelay());
+}
+
+function flashActionPoints(): void {
+    clearActionPointFlash();
+    actionPointFlash.value = true;
+    actionPointFlashTimer = window.setTimeout(() => {
+        actionPointFlash.value = false;
+    }, 900);
+}
+
+function syncActionPoints(actionPoints: ActionPointState): void {
+    const previousActionPoints = user.value.pa;
+
+    game.value = {
+        ...game.value,
+        user: {
+            ...game.value.user,
+            ...actionPoints,
+        },
+    };
+
+    if (actionPoints.pa > previousActionPoints) {
+        flashActionPoints();
+    }
+}
+
+function handleActionPointsChanged(event: ActionPointsChangedEvent): void {
+    syncActionPoints(event.actionPoints);
 }
 
 function decorateLocation(location: Location): Location {
@@ -392,7 +432,14 @@ function logout(): void {
 function disposeGameView(): void {
     isGameViewDisposed = true;
     clearActionPointRefresh();
+    clearActionPointFlash();
+    echo?.leave(actionPointChannel);
 }
+
+onMounted(() => {
+    echo?.private(actionPointChannel)
+        .listen('.action-points.changed', handleActionPointsChanged);
+});
 
 watch(
     () => [user.value.pa, user.value.paRegenerationLimit, user.value.paRegenerationSeconds, user.value.paRegeneratesAt],
@@ -447,7 +494,7 @@ async function scrollLog(): Promise<void> {
                         <span class="label">ZŁOTO:</span>
                         <span class="val gold">{{ formatNumber(user.gold) }}</span>
                     </div>
-                    <div class="res-row">
+                    <div class="res-row action-points-row" :class="{ 'pa-flash': actionPointFlash }">
                         <span class="label">PUNKTY AKCJI:</span>
                         <span class="val">{{ user.pa }}</span>
                     </div>

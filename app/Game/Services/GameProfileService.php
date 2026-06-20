@@ -68,6 +68,27 @@ final readonly class GameProfileService
         return max(0, (int) config('game.action_points.regeneration_limit', config('game.action_points.max', 20)));
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    public static function actionPointState(GameProfile $profile): array
+    {
+        $regenerationSeconds = self::actionPointRegenerationSeconds();
+        $regenerationLimit = self::actionPointRegenerationLimit();
+        $regeneratesAt = $profile->pa < $regenerationLimit && $profile->pa_regenerated_at
+            ? $profile->pa_regenerated_at->copy()->addSeconds($regenerationSeconds)->toIso8601String()
+            : null;
+
+        return [
+            'pa' => $profile->pa,
+            'paMax' => $profile->pa_max,
+            'paLimit' => $regenerationLimit,
+            'paRegenerationLimit' => $regenerationLimit,
+            'paRegenerationSeconds' => $regenerationSeconds,
+            'paRegeneratesAt' => $regeneratesAt,
+        ];
+    }
+
     public function ensureFor(User $user): GameProfile
     {
         /** @var GameProfile $profile */

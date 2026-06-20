@@ -17,6 +17,8 @@
         "@types/node": "^26.0.0",
         "@vitejs/plugin-vue": "^6.0.7",
         "axios": "^1.18.0",
+        "laravel-echo": "^2.3.7",
+        "pusher-js": "^8.5.0",
         "typescript": "^6.0.3",
         "vue": "^3.5.38",
         "vue-tsc": "^3.3.5"

@@ -62,6 +62,12 @@ export type Player = {
     };
 };
 
+export type ActionPointState = Pick<Player, 'pa' | 'paMax' | 'paLimit' | 'paRegenerationLimit' | 'paRegenerationSeconds' | 'paRegeneratesAt'>;
+
+export type ActionPointsChangedEvent = {
+    actionPoints: ActionPointState;
+};
+
 export type Stage = {
     stage: number;
     id?: number;

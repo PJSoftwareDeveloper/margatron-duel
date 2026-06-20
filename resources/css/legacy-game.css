@@ -148,6 +148,16 @@
   font-size: 0.9rem;
 }
 
+.action-points-row .val {
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.action-points-row.pa-flash .val {
+  color: #7dff8f;
+  text-shadow: 0 0 6px #19ff46, 1px 1px 1px #000;
+  transform: scale(1.12);
+}
+
 .btn-more-pa {
   width: 70%;
   margin-top: 5px;

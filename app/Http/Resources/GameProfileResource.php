@@ -17,12 +17,6 @@ final class GameProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $paRegenerationSeconds = GameProfileService::actionPointRegenerationSeconds();
-        $paRegenerationLimit = GameProfileService::actionPointRegenerationLimit();
-        $paRegeneratesAt = $this->pa < $paRegenerationLimit && $this->pa_regenerated_at
-            ? $this->pa_regenerated_at->copy()->addSeconds($paRegenerationSeconds)->toIso8601String()
-            : null;
-
         return [
             'id' => $this->user_id,
             'profileId' => $this->id,
@@ -32,12 +26,7 @@ final class GameProfileResource extends JsonResource
             'exp' => $this->exp,
             'expMax' => $this->exp_max,
             'gold' => $this->gold,
-            'pa' => $this->pa,
-            'paMax' => $this->pa_max,
-            'paLimit' => $paRegenerationLimit,
-            'paRegenerationLimit' => $paRegenerationLimit,
-            'paRegenerationSeconds' => $paRegenerationSeconds,
-            'paRegeneratesAt' => $paRegeneratesAt,
+            ...GameProfileService::actionPointState($this->resource),
             'vitality' => $this->vitality,
             'strength' => $this->strength,
             'luck' => $this->luck,
