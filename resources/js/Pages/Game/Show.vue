@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, nextTick, ref } from 'vue';
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 import type { AxiosError } from 'axios';
 import type { BattleResult, GameSnapshot, Item, Location, Stage } from '@/types/game';
 
@@ -29,6 +29,8 @@ const tooltipX = ref(0);
 const tooltipY = ref(0);
 const logScroll = ref<HTMLElement | null>(null);
 const equipmentSlots = ['weapon', 'armor', 'accessory'] as const;
+let actionPointRefreshTimer: number | undefined;
+let isGameViewDisposed = false;
 
 const user = computed(() => game.value.user);
 const currentMap = computed(() => game.value.currentMap);
@@ -53,6 +55,44 @@ function unwrap<T extends object>(resource: Resource<T>): T {
 
 function syncGame(payload: Resource<GameSnapshot>): void {
     game.value = unwrap(payload);
+}
+
+function clearActionPointRefresh(): void {
+    if (actionPointRefreshTimer !== undefined) {
+        window.clearTimeout(actionPointRefreshTimer);
+        actionPointRefreshTimer = undefined;
+    }
+}
+
+function actionPointRefreshDelay(): number {
+    if (user.value.paRegeneratesAt) {
+        return Math.max(250, Date.parse(user.value.paRegeneratesAt) - Date.now());
+    }
+
+    return Math.max(1, user.value.paRegenerationSeconds) * 1000;
+}
+
+async function refreshGameState(): Promise<void> {
+    const response = await axios.get('/game/state');
+    syncGame(response.data);
+}
+
+function scheduleActionPointRefresh(): void {
+    clearActionPointRefresh();
+
+    if (isGameViewDisposed || user.value.pa >= user.value.paMax) {
+        return;
+    }
+
+    actionPointRefreshTimer = window.setTimeout(async () => {
+        try {
+            await refreshGameState();
+        } finally {
+            if (! isGameViewDisposed) {
+                scheduleActionPointRefresh();
+            }
+        }
+    }, actionPointRefreshDelay());
 }
 
 function decorateLocation(location: Location): Location {
@@ -345,8 +385,22 @@ function showItemMenu(index: number): void {
 }
 
 function logout(): void {
+    clearActionPointRefresh();
     router.post('/logout');
 }
+
+function disposeGameView(): void {
+    isGameViewDisposed = true;
+    clearActionPointRefresh();
+}
+
+watch(
+    () => [user.value.pa, user.value.paMax, user.value.paRegenerationSeconds, user.value.paRegeneratesAt],
+    scheduleActionPointRefresh,
+    { immediate: true },
+);
+
+onUnmounted(disposeGameView);
 
 function showActionError(error: unknown): void {
     const axiosError = error as AxiosError<{ message?: string }>;

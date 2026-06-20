@@ -36,6 +36,9 @@ export type Player = {
     gold: number;
     pa: number;
     paMax: number;
+    paLimit: number;
+    paRegenerationSeconds: number;
+    paRegeneratesAt: string | null;
     vitality: number;
     strength: number;
     luck: number;

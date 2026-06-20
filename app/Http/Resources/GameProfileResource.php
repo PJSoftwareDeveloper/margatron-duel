@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Game\Services\GameProfileService;
 use App\Models\GameProfile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -16,6 +17,11 @@ final class GameProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $paRegenerationSeconds = GameProfileService::actionPointRegenerationSeconds();
+        $paRegeneratesAt = $this->pa < $this->pa_max && $this->pa_regenerated_at
+            ? $this->pa_regenerated_at->copy()->addSeconds($paRegenerationSeconds)->toIso8601String()
+            : null;
+
         return [
             'id' => $this->user_id,
             'profileId' => $this->id,
@@ -27,6 +33,9 @@ final class GameProfileResource extends JsonResource
             'gold' => $this->gold,
             'pa' => $this->pa,
             'paMax' => $this->pa_max,
+            'paLimit' => GameProfileService::actionPointMaximum(),
+            'paRegenerationSeconds' => $paRegenerationSeconds,
+            'paRegeneratesAt' => $paRegeneratesAt,
             'vitality' => $this->vitality,
             'strength' => $this->strength,
             'luck' => $this->luck,

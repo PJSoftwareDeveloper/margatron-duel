@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'gold',
     'pa',
     'pa_max',
+    'pa_regenerated_at',
     'vitality',
     'strength',
     'luck',
@@ -60,6 +61,7 @@ class GameProfile extends Model
             'stage_progress' => 'array',
             'inventory' => 'array',
             'equipped' => 'array',
+            'pa_regenerated_at' => 'datetime',
         ];
     }
 }

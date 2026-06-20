@@ -47,7 +47,7 @@ final readonly class GameStateService
     public function rest(GameProfile $profile, int $minutes): GameProfile
     {
         $paGain = $minutes === 1 ? 2 : 12;
-        $profile->pa = min($profile->pa_max, $profile->pa + $paGain);
+        $profile->pa = min($this->profiles->actionPointCap($profile), $profile->pa + $paGain);
         $profile->save();
 
         return $profile->refresh();
@@ -61,7 +61,7 @@ final readonly class GameStateService
 
         $profile->forceFill([
             'gold' => $profile->gold - 500,
-            'pa' => $profile->pa_max,
+            'pa' => $this->profiles->actionPointCap($profile),
         ])->save();
 
         return $profile->refresh();
@@ -75,7 +75,7 @@ final readonly class GameStateService
 
         $profile->forceFill([
             'gold' => $profile->gold - $price,
-            'pa' => min($profile->pa_max, $profile->pa + $amount),
+            'pa' => min($this->profiles->actionPointCap($profile), $profile->pa + $amount),
         ])->save();
 
         return $profile->refresh();

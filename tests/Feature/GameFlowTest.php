@@ -80,4 +80,51 @@ final class GameFlowTest extends TestCase
 
         $this->assertSame(19, GameProfile::query()->whereBelongsTo($user)->value('pa'));
     }
+
+    public function test_action_points_regenerate_over_time(): void
+    {
+        config()->set('game.action_points.regeneration_seconds', 60);
+        config()->set('game.action_points.max', 20);
+
+        $user = User::factory()->create();
+        GameProfile::factory()->for($user)->create([
+            'pa' => 10,
+            'pa_max' => 20,
+            'pa_regenerated_at' => now()->subSeconds(121),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/game/state')
+            ->assertOk()
+            ->assertJsonPath('data.user.pa', 12)
+            ->assertJsonPath('data.user.paMax', 20)
+            ->assertJsonPath('data.user.paLimit', 20)
+            ->assertJsonPath('data.user.paRegenerationSeconds', 60);
+
+        $this->assertSame(12, GameProfile::query()->whereBelongsTo($user)->value('pa'));
+    }
+
+    public function test_action_points_never_regenerate_past_configured_limit(): void
+    {
+        config()->set('game.action_points.regeneration_seconds', 60);
+        config()->set('game.action_points.max', 20);
+
+        $user = User::factory()->create();
+        GameProfile::factory()->for($user)->create([
+            'pa' => 19,
+            'pa_max' => 50,
+            'pa_regenerated_at' => now()->subDay(),
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/game/state')
+            ->assertOk()
+            ->assertJsonPath('data.user.pa', 20)
+            ->assertJsonPath('data.user.paMax', 20);
+
+        $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
+
+        $this->assertSame(20, $profile->pa);
+        $this->assertSame(20, $profile->pa_max);
+    }
 }
