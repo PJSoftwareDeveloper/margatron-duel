@@ -18,8 +18,8 @@ final class BuyPaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'amount' => ['required', 'integer', Rule::in([5, 10, 20])],
-            'price' => ['required', 'integer', Rule::in([100, 180, 500])],
+            'amount' => ['required', 'integer', Rule::in([5, 10, 15])],
+            'price' => ['required', 'integer', Rule::in([100, 180, 250])],
         ];
     }
 }
