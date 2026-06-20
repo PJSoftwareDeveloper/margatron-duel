@@ -53,6 +53,7 @@ final readonly class GameProfileService
             'unique_items_found' => 0,
             'heroic_items_found' => 0,
             'legendary_items_found' => 0,
+            'rest_tasks' => [],
             'current_map_id' => 1,
             'stage_progress' => [],
             'inventory' => array_fill(0, self::INVENTORY_SIZE, null),

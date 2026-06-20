@@ -1304,12 +1304,28 @@
   cursor: pointer;
   transition: all 0.2s;
   min-width: 150px;
+  font-family: inherit;
 }
 
-.rest-option:hover {
+.rest-option:hover:not(:disabled) {
   background: rgba(255,255,255,0.05);
   border-color: #6e9a32;
   transform: translateY(-3px);
+}
+
+.rest-option.active,
+.rest-option:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.rest-option.active {
+  border-color: #d6b642;
+  background: rgba(90, 65, 0, 0.32);
+}
+
+.rest-option:disabled:not(.active) {
+  opacity: 0.55;
 }
 
 .rest-option.premium {
@@ -1317,11 +1333,12 @@
   background: rgba(100, 80, 0, 0.2);
 }
 
-.rest-option.premium:hover { background: rgba(100, 80, 0, 0.3); }
+.rest-option.premium:hover:not(:disabled) { background: rgba(100, 80, 0, 0.3); }
 
 .rest-icon { font-size: 2rem; margin-bottom: 10px; }
 .rest-time { color: #fff; font-size: 1rem; margin-bottom: 5px; }
 .rest-bonus { color: #4caf50; font-weight: bold; font-size: 1.1rem; }
+.rest-countdown { color: #d8c772; margin-top: 7px; font-size: 0.85rem; }
 .rest-price { color: #ffd700; margin-top: 5px; }
 
 /* ================= WORLD MAP ================= */

@@ -6,7 +6,7 @@ import axios from 'axios';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { echo } from '@/echo';
 import type { AxiosError } from 'axios';
-import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Location, PlayerAttributeKey, Stage } from '@/types/game';
+import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
 
 type Resource<T> = T | { data: T };
 type GameView = 'map' | 'battleSelection' | 'arena' | 'battle' | 'shop' | 'rest' | 'worldMap';
@@ -32,11 +32,15 @@ const tooltipX = ref(0);
 const tooltipY = ref(0);
 const logScroll = ref<HTMLElement | null>(null);
 const actionPointFlash = ref(false);
+const nowTick = ref(Date.now());
 let actionPointRefreshTimer: number | undefined;
 let actionPointFlashTimer: number | undefined;
+let restCountdownTimer: number | undefined;
+let restRefreshTimer: number | undefined;
 let isGameViewDisposed = false;
 const actionPointChannel = `users.${game.value.user.id}`;
 const actionPointFallbackGraceMs = 2000;
+const restFallbackGraceMs = 1500;
 
 const user = computed(() => game.value.user);
 const currentMap = computed(() => game.value.currentMap);
@@ -46,6 +50,7 @@ const inventoryFiltered = computed(() => inventory.value.filter(Boolean) as Item
 const currentShop = computed(() => currentShopId.value ? game.value.shops[currentShopId.value] : null);
 const shopName = computed(() => currentShop.value?.name ?? '');
 const shopItems = computed(() => currentShop.value?.items ?? []);
+const instantRestConfig = computed(() => game.value.rest.instant);
 const battleStages = computed(() => selectedBattleLocation.value?.stages?.map((stage) => ({
     ...stage,
     id: stage.stage,
@@ -74,6 +79,54 @@ function clearActionPointFlash(): void {
         window.clearTimeout(actionPointFlashTimer);
         actionPointFlashTimer = undefined;
     }
+}
+
+function clearRestCountdown(): void {
+    if (restCountdownTimer !== undefined) {
+        window.clearInterval(restCountdownTimer);
+        restCountdownTimer = undefined;
+    }
+}
+
+function clearRestRefresh(): void {
+    if (restRefreshTimer !== undefined) {
+        window.clearTimeout(restRefreshTimer);
+        restRefreshTimer = undefined;
+    }
+}
+
+function startRestCountdown(): void {
+    clearRestCountdown();
+    restCountdownTimer = window.setInterval(() => {
+        nowTick.value = Date.now();
+    }, 1000);
+}
+
+function scheduleRestRefresh(): void {
+    clearRestRefresh();
+
+    if (isGameViewDisposed) {
+        return;
+    }
+
+    const nextRestEndsAt = game.value.rest.options
+        .map((option) => option.endsAt ? Date.parse(option.endsAt) : null)
+        .filter((timestamp): timestamp is number => timestamp !== null && timestamp > Date.now())
+        .sort((left, right) => left - right)[0] ?? null;
+
+    if (!nextRestEndsAt) {
+        return;
+    }
+
+    restRefreshTimer = window.setTimeout(async () => {
+        try {
+            await refreshGameState();
+        } finally {
+            if (!isGameViewDisposed) {
+                scheduleRestRefresh();
+            }
+        }
+    }, Math.max(250, nextRestEndsAt - Date.now() + restFallbackGraceMs));
 }
 
 function actionPointRefreshDelay(): number {
@@ -168,6 +221,31 @@ function getItemImage(itemOrPath?: Item | string | null): string {
 
 function formatNumber(num?: number): string {
     return (num ?? 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+function restOption(minutes: 1 | 5): RestOption | undefined {
+    return game.value.rest.options.find((option) => option.minutes === minutes);
+}
+
+function restRemainingSeconds(minutes: 1 | 5): number {
+    const option = restOption(minutes);
+
+    if (!option?.endsAt) {
+        return 0;
+    }
+
+    return Math.max(0, Math.ceil((Date.parse(option.endsAt) - nowTick.value) / 1000));
+}
+
+function isRestOptionActive(minutes: 1 | 5): boolean {
+    return restRemainingSeconds(minutes) > 0;
+}
+
+function formatCountdown(seconds: number): string {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
 function showTooltip(item: Item | null | undefined, event: MouseEvent): void {
@@ -392,13 +470,19 @@ async function unequip(slot: EquipmentSlot): Promise<void> {
 }
 
 async function rest(minutes: 1 | 5): Promise<void> {
+    if (isRestOptionActive(minutes)) {
+        return;
+    }
+
     await action('/game/actions/rest', { minutes });
-    currentView.value = 'map';
 }
 
 async function instantRest(): Promise<void> {
+    if (user.value.gold < instantRestConfig.value.goldPrice) {
+        return;
+    }
+
     await action('/game/actions/rest/instant');
-    currentView.value = 'map';
 }
 
 async function addAttribute(attribute: PlayerAttributeKey): Promise<void> {
@@ -428,10 +512,13 @@ function disposeGameView(): void {
     isGameViewDisposed = true;
     clearActionPointRefresh();
     clearActionPointFlash();
+    clearRestCountdown();
+    clearRestRefresh();
     echo?.leave(actionPointChannel);
 }
 
 onMounted(() => {
+    startRestCountdown();
     echo?.private(actionPointChannel)
         .listen('.action-points.changed', handleActionPointsChanged);
 });
@@ -439,6 +526,12 @@ onMounted(() => {
 watch(
     () => [user.value.pa, user.value.paRegenerationLimit, user.value.paRegenerationSeconds, user.value.paRegeneratesAt],
     scheduleActionPointRefresh,
+    { immediate: true },
+);
+
+watch(
+    () => game.value.rest.options.map((option) => option.endsAt).join('|'),
+    scheduleRestRefresh,
     { immediate: true },
 );
 
@@ -663,19 +756,42 @@ async function scrollLog(): Promise<void> {
                     <div class="rest-content">
                         <p class="rest-description">Odpocznij, aby zregenerować PA szybciej.</p>
                         <div class="rest-options">
-                            <div class="rest-option" @click="rest(1)">
+                            <button
+                                class="rest-option"
+                                :class="{ active: isRestOptionActive(1) }"
+                                type="button"
+                                :disabled="isRestOptionActive(1)"
+                                @click="rest(1)"
+                            >
                                 <span class="rest-time">1 minuta</span>
                                 <span class="rest-bonus">+2 PA</span>
-                            </div>
-                            <div class="rest-option" @click="rest(5)">
+                                <span class="rest-countdown">
+                                    {{ isRestOptionActive(1) ? `Odbiór za ${formatCountdown(restRemainingSeconds(1))}` : 'Rozpocznij' }}
+                                </span>
+                            </button>
+                            <button
+                                class="rest-option"
+                                :class="{ active: isRestOptionActive(5) }"
+                                type="button"
+                                :disabled="isRestOptionActive(5)"
+                                @click="rest(5)"
+                            >
                                 <span class="rest-time">5 minut</span>
                                 <span class="rest-bonus">+12 PA</span>
-                            </div>
-                            <div class="rest-option premium" @click="instantRest">
+                                <span class="rest-countdown">
+                                    {{ isRestOptionActive(5) ? `Odbiór za ${formatCountdown(restRemainingSeconds(5))}` : 'Rozpocznij' }}
+                                </span>
+                            </button>
+                            <button
+                                class="rest-option premium"
+                                type="button"
+                                :disabled="user.gold < instantRestConfig.goldPrice"
+                                @click="instantRest"
+                            >
                                 <span class="rest-time">Natychmiast</span>
-                                <span class="rest-bonus">Pełne PA</span>
-                                <span class="rest-price">💰 500</span>
-                            </div>
+                                <span class="rest-bonus">Pełne PA do {{ instantRestConfig.targetActionPoints }}</span>
+                                <span class="rest-price">💰 {{ formatNumber(instantRestConfig.goldPrice) }}</span>
+                            </button>
                         </div>
                     </div>
                     <div class="inline-footer">

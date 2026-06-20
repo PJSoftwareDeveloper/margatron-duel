@@ -8,4 +8,20 @@ return [
             env('GAME_ACTION_POINT_MAX', 20),
         ),
     ],
+
+    'rest' => [
+        'options' => [
+            1 => [
+                'duration_seconds' => (int) env('GAME_REST_ONE_MINUTE_SECONDS', 60),
+                'action_points' => 2,
+            ],
+            5 => [
+                'duration_seconds' => (int) env('GAME_REST_FIVE_MINUTES_SECONDS', 300),
+                'action_points' => 12,
+            ],
+        ],
+        'instant' => [
+            'gold_price' => 500,
+        ],
+    ],
 ];

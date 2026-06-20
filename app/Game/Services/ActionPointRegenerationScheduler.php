@@ -4,6 +4,7 @@ namespace App\Game\Services;
 
 use App\Jobs\RegenerateActionPoints;
 use App\Models\GameProfile;
+use Throwable;
 
 final readonly class ActionPointRegenerationScheduler
 {
@@ -21,8 +22,12 @@ final readonly class ActionPointRegenerationScheduler
             ->copy()
             ->addSeconds(GameProfileService::actionPointRegenerationSeconds());
 
-        RegenerateActionPoints::dispatch((int) $profile->getKey())
-            ->onQueue('action-points')
-            ->delay($nextRegenerationAt);
+        try {
+            RegenerateActionPoints::dispatch((int) $profile->getKey())
+                ->onQueue('action-points')
+                ->delay($nextRegenerationAt);
+        } catch (Throwable $exception) {
+            report($exception);
+        }
     }
 }

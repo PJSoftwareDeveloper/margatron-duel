@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Events\ActionPointsChanged;
 use App\Game\Services\ActionPointRegenerationScheduler;
 use App\Game\Services\GameProfileService;
+use App\Game\Services\TavernRestService;
+use App\Jobs\CompleteRest;
 use App\Jobs\RegenerateActionPoints;
 use App\Models\GameProfile;
 use App\Models\User;
@@ -267,5 +269,107 @@ final class GameFlowTest extends TestCase
 
         $this->assertSame(24, $profile->pa);
         $this->assertNull($profile->inventory[0]);
+    }
+
+    public function test_tavern_rest_starts_countdown_without_granting_action_points_immediately(): void
+    {
+        config()->set('queue.default', 'redis');
+        config()->set('game.rest.options.1.duration_seconds', 60);
+        Queue::fake();
+        $now = Carbon::parse('2026-06-20 18:00:00');
+        Carbon::setTestNow($now);
+
+        try {
+            $user = User::factory()->create();
+            GameProfile::factory()->for($user)->create([
+                'pa' => 8,
+                'pa_regenerated_at' => $now,
+            ]);
+
+            $this->actingAs($user)
+                ->postJson('/game/actions/rest', ['minutes' => 1])
+                ->assertOk()
+                ->assertJsonPath('data.user.pa', 8)
+                ->assertJsonPath('data.rest.options.0.minutes', 1)
+                ->assertJsonPath('data.rest.options.0.active', true)
+                ->assertJsonPath('data.rest.options.0.endsAt', $now->copy()->addMinute()->toIso8601String());
+
+            $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
+            $this->assertSame(8, $profile->pa);
+            $this->assertSame(2, $profile->rest_tasks['1']['action_points']);
+
+            Queue::assertPushedOn(
+                'action-points',
+                CompleteRest::class,
+                fn (CompleteRest $job): bool => $job->profileId === $profile->id
+                    && $job->minutes === 1,
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_tavern_rest_rejects_restarting_the_same_active_option(): void
+    {
+        $now = Carbon::parse('2026-06-20 18:30:00');
+        Carbon::setTestNow($now);
+
+        try {
+            $user = User::factory()->create();
+            GameProfile::factory()->for($user)->create([
+                'rest_tasks' => [
+                    '5' => [
+                        'minutes' => 5,
+                        'action_points' => 12,
+                        'ends_at' => $now->copy()->addMinutes(5)->toIso8601String(),
+                    ],
+                ],
+            ]);
+
+            $this->actingAs($user)
+                ->postJson('/game/actions/rest', ['minutes' => 5])
+                ->assertUnprocessable()
+                ->assertJsonPath('message', 'Ten odpoczynek już trwa.');
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
+    public function test_tavern_rest_completion_grants_action_points_and_broadcasts_update(): void
+    {
+        $now = Carbon::parse('2026-06-20 19:00:00');
+        Carbon::setTestNow($now);
+        Event::fake([ActionPointsChanged::class]);
+
+        try {
+            $profile = GameProfile::factory()->create([
+                'pa' => 8,
+                'pa_regenerated_at' => $now->copy()->subMinute(),
+                'rest_tasks' => [
+                    '1' => [
+                        'minutes' => 1,
+                        'action_points' => 2,
+                        'ends_at' => $now->toIso8601String(),
+                    ],
+                ],
+            ]);
+
+            (new CompleteRest($profile->id, 1))->handle(
+                app(TavernRestService::class),
+                app(ActionPointRegenerationScheduler::class),
+            );
+
+            $profile->refresh();
+
+            $this->assertSame(10, $profile->pa);
+            $this->assertSame([], $profile->rest_tasks);
+            Event::assertDispatched(
+                ActionPointsChanged::class,
+                fn (ActionPointsChanged $event): bool => $event->userId === $profile->user_id
+                    && $event->actionPoints['pa'] === 10,
+            );
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 }

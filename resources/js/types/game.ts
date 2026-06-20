@@ -71,6 +71,23 @@ export type ActionPointsChangedEvent = {
     actionPoints: ActionPointState;
 };
 
+export type RestOption = {
+    minutes: 1 | 5;
+    durationSeconds: number;
+    actionPoints: number;
+    active: boolean;
+    endsAt: string | null;
+    remainingSeconds: number;
+};
+
+export type RestState = {
+    options: RestOption[];
+    instant: {
+        goldPrice: number;
+        targetActionPoints: number;
+    };
+};
+
 export type Stage = {
     stage: number;
     id?: number;
@@ -134,6 +151,7 @@ export type GameSnapshot = {
     currentMap: GameMap;
     worldMaps: WorldMap[];
     shops: Record<string, Shop>;
+    rest: RestState;
 };
 
 export type RankingEntry = {

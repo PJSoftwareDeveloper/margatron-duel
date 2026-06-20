@@ -12,6 +12,7 @@ final readonly class GameStateService
     public function __construct(
         private StaticGameCatalogRepository $catalog,
         private GameProfileService $profiles,
+        private TavernRestService $rests,
     ) {}
 
     /**
@@ -19,6 +20,7 @@ final readonly class GameStateService
      */
     public function snapshot(GameProfile $profile): array
     {
+        $profile = $this->rests->completeExpired($profile);
         $profile = $this->profiles->recalculate($profile);
         $map = $this->withRuntimeMapData($profile, $this->catalog->map($profile->current_map_id));
 
@@ -27,6 +29,7 @@ final readonly class GameStateService
             'map' => $map,
             'worldMaps' => $this->worldMaps($profile),
             'shops' => $this->catalog->shops(),
+            'rest' => $this->rests->state($profile),
         ];
     }
 
@@ -46,28 +49,12 @@ final readonly class GameStateService
 
     public function rest(GameProfile $profile, int $minutes): GameProfile
     {
-        $paGain = $minutes === 1 ? 2 : 12;
-        $profile->forceFill([
-            'pa' => $profile->pa + $paGain,
-            'pa_regenerated_at' => now(),
-        ])->save();
-
-        return $profile->refresh();
+        return $this->rests->start($profile, $minutes);
     }
 
     public function instantRest(GameProfile $profile): GameProfile
     {
-        if ($profile->gold < 500) {
-            throw new DomainException('Masz za mało złota.');
-        }
-
-        $profile->forceFill([
-            'gold' => $profile->gold - 500,
-            'pa' => max($profile->pa, GameProfileService::actionPointRegenerationLimit()),
-            'pa_regenerated_at' => now(),
-        ])->save();
-
-        return $profile->refresh();
+        return $this->rests->instant($profile);
     }
 
     public function buyPa(GameProfile $profile, int $amount, int $price): GameProfile
