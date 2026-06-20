@@ -1,0 +1,20 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Verdana, Arial, sans-serif;
+  background: #000 url('src/assets/mainback.jpg') center no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: #ccc;
+  font-size: 12px;
+}
+
+/* Jeśli nie masz obrazka tła, użyj tego: */
+body.no-bg {
+  background: #1a1510;
+}
