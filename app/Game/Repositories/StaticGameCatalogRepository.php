@@ -21,7 +21,8 @@ final readonly class StaticGameCatalogRepository
                 'locations' => [
                     $this->battle('ithan-yss', 'Dolina Yss(6-10lvl)', 90, 7, 3, 6, 10, ['wolf', 'spider']),
                     $this->battle('ithan-hunters-cave', 'Jaskinia Łowców(1-5lvl)', 46, 13, 1, 1, 5, ['goblin', 'rat']),
-                    $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
+                    //$this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
+                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 23.3, 27, 2),
                     $this->shop('ithan-roan', 'Sklep Roana', 87.5, 70, 'blacksmith_1'),
                     $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, 33.5, 76),
                     $this->shop('ithan-makatara', 'Sklep Makatary', 8.6, 76, 'alchemist_1'),
@@ -32,6 +33,18 @@ final readonly class StaticGameCatalogRepository
                     'rat' => $this->enemy('Szczur', 'szczur.gif', 8, 1, 2, 4, 0),
                     'wolf' => $this->enemy('Wilk', 'wolf.gif', 25, 3, 6, 11, 0),
                     'spider' => $this->enemy('Pająk', 'spider.gif', 30, 4, 7, 14, 0),
+                ],
+                'eliteEnemies' => [
+                    'astratus' => $this->enemy('Astratus', 'astratus.gif', 100, 10, 30, 50, 50),
+                    'werecatTracker' => $this->enemy('Kotołak Tropiciel', 'kotolak.gif', 100, 10, 30, 50, 50),
+                ],
+                'elite2Enemies' => [
+                    'riverLord' => $this->enemy('Władca rzek', 'wladca-rzek.gif', 150, 20, 50, 75, 60),
+                ],
+                'heroEnemies' => [
+                    'harrietTheDomina' => $this->enemy('Domina Ecclesiae', 'domina-ecclesiae.gif', 150, 30, 70, 180, 100),
+                    'billyTheDrunkard' => $this->enemy('Mietek Żul', 'zulek.gif', 30, 10, 30, 100, 5),
+                    'wickedPatrick' => $this->enemy('Mroczny Patryk', 'mroczny-patryk3.gif', 300, 30, 100, 300, 666),
                 ],
                 'arenaEnemies' => [
                     ArenaDifficulty::Easy->value => ['goblin', 'rat'],
@@ -151,6 +164,8 @@ final readonly class StaticGameCatalogRepository
                 'id' => 'alchemist_1',
                 'name' => 'Sklep Makatary',
                 'items' => [
+                    $this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
+                   
                     $this->shopItem(301, 'Mała mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'heal', 'value' => 20]),
                     $this->shopItem(302, 'Średnia mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 3, [], 80, ['type' => 'heal', 'value' => 50]),
                     $this->shopItem(303, 'Duża mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 5, [], 150, ['type' => 'heal', 'value' => 100]),
@@ -303,9 +318,9 @@ final readonly class StaticGameCatalogRepository
     /**
      * @return array<string, mixed>
      */
-    public function scaledEnemy(int $mapId, string $enemyKey, int $level): array
+    public function scaledEnemy(int $mapId, string $enemyKey, int $level, string $enemyType): array
     {
-        $enemy = $this->map($mapId)['enemies'][$enemyKey] ?? throw new InvalidArgumentException("Unknown enemy [{$enemyKey}].");
+        $enemy = $this->map($mapId)[$enemyType][$enemyKey] ?? throw new InvalidArgumentException("Unknown enemy [{$enemyKey}].");
         $multiplier = 1 + (($level - 1) * 0.15);
 
         return [

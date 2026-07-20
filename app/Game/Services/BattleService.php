@@ -49,7 +49,7 @@ final readonly class BattleService
             $stageData = collect($this->catalog->stagesForLocation($location, $unlockedStage))
                 ->first(fn (array $candidate): bool => $candidate['stage'] === $stage);
             $enemyKey = $location['enemies'][array_rand($location['enemies'])];
-            $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, (int) $stageData['level']);
+            $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, (int) $stageData['level'], 'enemies');
             $result = $this->runAutoBattle($profile, $enemy, "{$location['name']} - Etap {$stage}");
 
             if ($result['won']) {
@@ -87,7 +87,7 @@ final readonly class BattleService
 
             $enemyKey = $enemyKeys[array_rand($enemyKeys)];
             $level = $map['levelRange']['min'] + $difficulty->levelBonus();
-            $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level);
+            $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level, 'enemies');
             $result = $this->runAutoBattle($profile, $enemy, "Arena - {$difficulty->label()} Walka", $difficulty);
 
             if ($result['won']) {
@@ -99,6 +99,55 @@ final readonly class BattleService
             return $result;
         });
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function fightToughEnemy(GameProfile $profile, string $locationId, string $enemyType): array
+    {
+        return DB::transaction(function () use ($profile, $locationId, $enemyType): array {
+            $profile->refresh();
+            $map = $this->catalog->map($profile->current_map_id);
+            $location = $this->catalog->location($map['id'], $locationId);
+
+            if (! $location || $location['type'] !== LocationType::ToughEnemy->value) {
+                throw new DomainException('Nie znaleziono przeciwnika.');
+            }
+
+            $this->spendPa($profile, (int) ($location['pa'] ?? 1));
+
+
+            $enemyTag = 'none';
+            switch($enemyType){
+                case 'elite':
+                    $enemyTag = 'eliteEnemies';
+                    break;
+                case 'elite2':
+                    $enemyTag = 'elite2Enemies';
+                    break;
+                case 'hero':
+                    $enemyTag = 'heroEnemies';
+                    break;
+            }
+            $enemyKeys = array_keys($map[$enemyTag]);
+            if ($enemyKeys === []) {
+                throw new DomainException('Walka z przeciwnikiem na tej mapie jest niedostępna.');
+            }
+            $enemyKey = $enemyKeys[array_rand($enemyKeys)];
+            $level = $map['levelRange']['min'];
+            $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level, $enemyTag);
+            $result = $this->runAutoBattle($profile, $enemy, "Walka z silnym przeciwnikiem");
+
+            if ($result['won']) {
+                $this->applyVictory($profile, $enemy, $result);
+            } else {
+                $this->applyDefeat($profile, $result);
+            }
+
+            return $result;
+        });
+    }
+
 
     /**
      * @param  array<string, mixed>  $enemy
@@ -119,7 +168,9 @@ final readonly class BattleService
             $finalDmg = $isCrit ? (int) floor($playerDmg * ($profile->crit_power / 100)) : $playerDmg;
             $enemyHp = max(0, $enemyHp - $finalDmg);
             $log[] = [
-                'text' => "Zadałeś przeciwnikowi {$finalDmg} obrażeń. {$enemy['name']} otrzymał {$finalDmg} obrażeń, {$enemyHp} pz pozostało.".($isCrit ? ' KRYTYK!' : ''),
+                
+                'text' => "<b class=\"player-attack\">Zadałeś</b> przeciwnikowi {$finalDmg} obrażeń.
+                <b class=\"enemy-attack\">{$enemy['name']}</b> otrzymał {$finalDmg} obrażeń, {$enemyHp} pz pozostało.".($isCrit ? ' KRYTYK!' : ''),
                 'type' => 'player-attack',
             ];
 
@@ -133,10 +184,12 @@ final readonly class BattleService
             if ($dodged) {
                 $log[] = ['text' => 'Unikasz ataku!', 'type' => 'dodge'];
             } else {
-                $reducedDmg = max(1, $enemyDmg - (int) floor($profile->armor / 10));
+                $reducedDmg = max(0, $enemyDmg - (int) floor($profile->armor));
                 $playerHp = max(0, $playerHp - $reducedDmg);
                 $log[] = [
-                    'text' => "{$enemy['name']} uderzył z siłą {$enemyDmg} obrażeń. Otrzymałeś {$reducedDmg} obrażeń, {$playerHp} pozostało.",
+                    'text' => "<b class=\"enemy-attack\">{$enemy['name']}</b> uderzył z siłą {$enemyDmg} obrażeń.
+                    Obecny pancerz: {$profile->armor}
+                    <b class=\"player-attack\">Otrzymałeś</b> {$reducedDmg} obrażeń, {$playerHp} pozostało.",
                     'type' => 'enemy-attack',
                 ];
             }
@@ -244,6 +297,7 @@ final readonly class BattleService
         $profile->pa_regenerated_at = now();
         $profile->save();
     }
+
 
     private function percentRoll(): float
     {

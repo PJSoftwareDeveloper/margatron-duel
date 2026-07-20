@@ -100,7 +100,7 @@ export type Stage = {
 export type Location = {
     id: string;
     name: string;
-    type: 'battle' | 'arena' | 'shop' | 'rest' | 'worldmap';
+    type: 'battle' | 'arena' | 'elite' | 'shop' | 'rest' | 'worldmap';
     x: number;
     y: number;
     pa?: number;

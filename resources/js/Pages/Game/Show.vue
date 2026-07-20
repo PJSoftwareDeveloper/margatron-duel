@@ -8,8 +8,9 @@ import { echo } from '@/echo';
 import type { AxiosError } from 'axios';
 import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
 
+
 type Resource<T> = T | { data: T };
-type GameView = 'map' | 'battleSelection' | 'arena' | 'battle' | 'shop' | 'rest' | 'worldMap';
+type GameView = 'map' | 'battleSelection' | 'arena' | 'toughenemy' | 'battle' | 'shop' | 'rest' | 'worldMap';
 
 const props = defineProps<{
     game: Resource<GameSnapshot>;
@@ -192,6 +193,7 @@ function decorateLocation(location: Location): Location {
     const meta = {
         battle: { icon: '⚔', description: 'Expowisko z pięcioma etapami walki.' },
         arena: { icon: '♜', description: 'Arena z losowymi przeciwnikami.' },
+        toughenemy: { icon: 'X', description: 'Walka z mocnym przeciwnikiem.' },
         shop: { icon: '¤', description: 'Sklep z przedmiotami.' },
         rest: { icon: '⌛', description: 'Odpoczynek i regeneracja PA.' },
         worldmap: { icon: '◆', description: 'Przejście do mapy świata.' },
@@ -334,6 +336,7 @@ function getEnterButtonText(location: Location): string {
         rest: 'Odpocznij',
         worldmap: 'Otwórz mapę',
         arena: 'Wejdź na arenę',
+        toughenemy: 'Rzuć wyzwanie',
     }[location.type] ?? 'Wejdź';
 }
 
@@ -357,6 +360,9 @@ function confirmEnterLocation(): void {
         currentView.value = 'worldMap';
     } else if (location.type === 'arena') {
         currentView.value = 'arena';
+    }else if (location.type === 'toughenemy') {
+        selectedBattleLocation.value = location;
+        currentView.value = 'toughenemy';
     }
 
     selectedLocation.value = null;
@@ -386,6 +392,24 @@ async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean 
         locationId: selectedBattleLocation.value.id,
         stage: stage.stage,
     });
+    battleResult.value = response.data.battle;
+    syncGame(response.data.game);
+    currentView.value = 'battle';
+    await scrollLog();
+}
+
+
+async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<void> {
+        console.log(selectedBattleLocation.value);
+    if (!selectedBattleLocation.value) {
+        return;
+    }
+
+    const response = await axios.post('/game/actions/battle/tough', {
+        locationId: selectedBattleLocation.value.id,
+        enemyType: enemyType,
+    });
+
     battleResult.value = response.data.battle;
     syncGame(response.data.game);
     currentView.value = 'battle';
@@ -625,7 +649,36 @@ async function scrollLog(): Promise<void> {
                         <button class="btn-back" @click="goBackToMap">← Powrót do mapy</button>
                     </div>
                 </div>
-
+                <div v-else-if="currentView === 'toughenemy'" class="inline-view arena-inline">
+                    <div class="inline-header">Mocny przeciwnik</div>
+                    <div class="arena-main-layout">
+                        <div class="arena-left-panel">
+                            <div class="arena-info-text">
+                                <h3>Witaj!</h3>
+                                <p>Tutaj możesz zmierzyć się z silnym przeciwnikiem.</p>
+                            </div>
+                        </div>
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
+                            <div class="arena-buttons-container">
+                                <button class="arena-difficulty-btn easy" @click="startToughFight('elite')">
+                                    <span class="difficulty-name">Walka z elitą</span>
+                                    <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min }}</span>
+                                </button>
+                                <button class="arena-difficulty-btn medium" @click="startToughFight('elite2')">
+                                    <span class="difficulty-name">Walka z elitą 2</span>
+                                    <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min + 5}}</span>
+                                </button>
+                                <button class="arena-difficulty-btn hard" @click="startToughFight('hero')">
+                                    <span class="difficulty-name">Walka z herosem</span>
+                                    <span class="difficulty-desc">Poziom {{ currentMap.levelRange.max }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inline-footer">
+                        <button class="btn-back" @click="goBackToMap">← Wyjdź</button>
+                    </div>
+                </div>
                 <div v-else-if="currentView === 'arena'" class="inline-view arena-inline">
                     <div class="inline-header">Arena</div>
                     <div class="arena-main-layout">
@@ -669,7 +722,9 @@ async function scrollLog(): Promise<void> {
                                     :class="['log-entry', log.type]"
                                     :style="log.color ? { color: log.color } : {}"
                                 >
-                                    <span class="log-text">{{ log.text }}</span>
+                                    <img v-if="log.type =='player-attack'" :src="getItemImage(`items/miecz05_pol.gif`)" alt="">
+                                    <img v-if="log.type =='enemy-attack'" :src="getItemImage(`items/tar_tarcza09.gif`)" alt="">
+                                    <span class="log-text" v-html="log.text"></span>
                                 </div>
                             </div>
                         </div>
@@ -682,6 +737,7 @@ async function scrollLog(): Promise<void> {
                             <div v-if="battleResult?.rewards.drop" class="battle-drop">
                                 <div class="drop-item" :class="battleResult.rewards.drop.rarityCss">
                                     <img :src="getItemImage(battleResult.rewards.drop)" :alt="battleResult.rewards.drop.name" class="drop-image">
+                                    
                                     <span class="drop-name" :style="{ color: battleResult.rewards.drop.rarityColor }">{{ battleResult.rewards.drop.name }}</span>
                                 </div>
                             </div>
@@ -692,7 +748,7 @@ async function scrollLog(): Promise<void> {
                                     <span v-else class="lose">Walka przegrana</span>
                                 </div>
                                 <div class="battle-buttons">
-                                    <button v-if="battleResult?.won" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
+                                    <button v-if="battleResult?.won && lastBattleStage?.value != null" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
                                     <button class="btn-battle-action" @click="closeBattle">Wróć do mapy</button>
                                 </div>
                             </div>
@@ -877,6 +933,24 @@ async function scrollLog(): Promise<void> {
         <div v-if="tooltipItem" id="tip" class="t_item" :style="{ left: tooltipX + 'px', top: tooltipY + 'px', display: 'block' }">
             <div class="tipInnerContainer">
                 <b :class="tooltipItem.rarityCss">{{ tooltipItem.name }}</b>
+                <i v-if="tooltipItem.rarity !== 'common'" class="rarity">{{ tooltipItem.rarityName }}</i>
+                <br/>
+                <i v-if="tooltipItem.dmgMin !== undefined" class="idesc">Obrażenia: {{ tooltipItem.dmgMin }}-{{ tooltipItem.dmgMax }}</i>
+                <i v-if="tooltipItem.armor !== undefined" class="idesc">Pancerz: {{ tooltipItem.armor }}</i>
+                <i v-if="tooltipItem.effect === 'heal'" class="idesc">Leczy {{ tooltipItem.effectValue }} punktów życia</i>
+                <i v-if="tooltipItem.effect === 'pa'" class="idesc">Przywraca {{ tooltipItem.effectValue }} PA</i>
+                <i v-for="stat in bonusRows(tooltipItem)" :key="stat.key" class="idesc">{{ stat.name }}: {{ stat.value }}{{ stat.suffix }}</i>
+                
+                <br/>
+                <i v-if="tooltipItem.power" class="idesc">Moc przedmiotu: {{ tooltipItem.power }}</i>
+                <i class="idesc">Wartość: {{ tooltipItem.price }}</i>
+            
+                
+            </div>
+           
+           
+            <!--<div class="tipInnerContainer">
+                <b :class="tooltipItem.rarityCss">{{ tooltipItem.name }}</b>
                 <i v-if="tooltipItem.rarity !== 'common'" :class="tooltipItem.rarityCss">{{ tooltipItem.itemTypeName }} ({{ tooltipItem.rarityName }})</i>
                 <i v-else>{{ tooltipItem.itemTypeName }}</i>
                 <i v-if="(tooltipItem.level ?? 1) > 1" class="idesc">Wymagany poziom: {{ tooltipItem.level }}</i>
@@ -889,7 +963,7 @@ async function scrollLog(): Promise<void> {
                 <div class="tip-divider"></div>
                 <i v-if="tooltipItem.power" class="idesc stat-power">Moc przedmiotu: {{ tooltipItem.power }}</i>
                 <i class="idesc stat-gold">Wartość: {{ tooltipItem.price }} złota</i>
-            </div>
+            </div>-->
         </div>
     </div>
 </template>
