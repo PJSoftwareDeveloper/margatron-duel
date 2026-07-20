@@ -11,6 +11,7 @@ use App\Game\Services\GameStateService;
 use App\Game\Services\InventoryService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Game\ArenaBattleRequest;
+use App\Http\Requests\Game\ToughBattleRequest;
 use App\Http\Requests\Game\AttributeRequest;
 use App\Http\Requests\Game\BuyItemRequest;
 use App\Http\Requests\Game\BuyPaRequest;
@@ -41,6 +42,15 @@ final class GameActionController extends Controller
         return $this->respondWithBattle($request, $profiles, $gameState, $actionPoints, fn ($profile) => $battles->fightArena(
             $profile,
             ArenaDifficulty::from($request->string('difficulty')->toString()),
+        ));
+    }
+    
+    public function toughBattle(ToughBattleRequest $request, GameProfileService $profiles, GameStateService $gameState, ActionPointRegenerationScheduler $actionPoints, BattleService $battles): JsonResponse
+    {
+        return $this->respondWithBattle($request, $profiles, $gameState, $actionPoints, fn ($profile) => $battles->fightToughEnemy(
+            $profile,
+            $request->string('locationId')->toString(),
+            $request->string('enemyType')->toString()
         ));
     }
 

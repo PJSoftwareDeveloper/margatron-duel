@@ -37,6 +37,7 @@ Route::middleware('auth')->group(function (): void {
     Route::prefix('/game/actions')->name('game.actions.')->group(function (): void {
         Route::post('/battle/stage', [GameActionController::class, 'stageBattle'])->name('battle.stage');
         Route::post('/battle/arena', [GameActionController::class, 'arenaBattle'])->name('battle.arena');
+        Route::post('/battle/tough', [GameActionController::class, 'toughBattle'])->name('battle.tough');
         Route::post('/attribute', [GameActionController::class, 'addAttribute'])->name('attribute');
         Route::post('/map', [GameActionController::class, 'selectMap'])->name('map');
         Route::post('/rest', [GameActionController::class, 'rest'])->name('rest');

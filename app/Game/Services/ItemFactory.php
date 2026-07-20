@@ -13,16 +13,17 @@ final readonly class ItemFactory
         private StaticGameCatalogRepository $catalog,
     ) {}
 
+
     /**
      * @return array<string, mixed>|null
      */
     public function rollForDrop(int $enemyLevel, int $playerLuck = 0, ?ArenaDifficulty $arenaDifficulty = null): ?array
     {
         $dropChance = min(85, (40 + $playerLuck) * ($arenaDifficulty?->dropRate() ?? 1));
-
-        if ($this->percentRoll() > $dropChance) {
+        $percentRollValue = $this->percentRoll();
+        if ($percentRollValue > $dropChance) {
             return null;
-        }
+        } 
 
         return $this->generate($enemyLevel, luckBonus: $playerLuck, arenaDifficulty: $arenaDifficulty);
     }
@@ -103,14 +104,21 @@ final readonly class ItemFactory
     private function rollRarity(int $luckBonus, ?ArenaDifficulty $arenaDifficulty): ItemRarity
     {
         $chances = $this->catalog->baseDropChances();
-        $luckMod = $luckBonus * 0.5;
+        $luckMod = $luckBonus / 2;
         $arenaBonus = $arenaDifficulty?->rarityBonus() ?? 0;
 
-        $chances[ItemRarity::Common->value] = max(10, $chances[ItemRarity::Common->value] - $luckMod - $arenaBonus);
-        $chances[ItemRarity::Unique->value] += $luckMod * 0.6 + ($arenaBonus * 0.5);
-        $chances[ItemRarity::Heroic->value] += $luckMod * 0.3 + ($arenaBonus * 0.3);
-        $chances[ItemRarity::Legendary->value] += $luckMod * 0.1 + ($arenaBonus * 0.2);
+        $legendaryChance = $chances[ItemRarity::Legendary->value] + ($luckMod * 0.1) + ($arenaBonus * 0.2);
+        $heroicChance = $chances[ItemRarity::Heroic->value] + $luckMod * 0.3 + ($arenaBonus * 0.3) - $legendaryChance;
+        $uniqueChance = $chances[ItemRarity::Unique->value] + $luckMod * 0.6 + ($arenaBonus * 0.5) - $heroicChance - $legendaryChance;
+        $commonChance = 100 - $uniqueChance - $heroicChance - $legendaryChance;
 
+        $chances[ItemRarity::Legendary->value] = $legendaryChance;
+        $chances[ItemRarity::Heroic->value] = $heroicChance;
+        $chances[ItemRarity::Unique->value] = $uniqueChance;
+        $chances[ItemRarity::Common->value] = $commonChance;
+        logger()->info($chances);
+        logger()->info("Arena bonus: $arenaBonus");
+        logger()->info("Luck modifier: $luckMod");
         $roll = $this->percentRoll();
         $cursor = 0.0;
 
