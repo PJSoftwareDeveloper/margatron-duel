@@ -404,16 +404,19 @@ async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<
     if (!selectedBattleLocation.value) {
         return;
     }
+    try{
+        const response = await axios.post('/game/actions/battle/tough', {
+            locationId: selectedBattleLocation.value.id,
+            enemyType: enemyType,
+        });
 
-    const response = await axios.post('/game/actions/battle/tough', {
-        locationId: selectedBattleLocation.value.id,
-        enemyType: enemyType,
-    });
-
-    battleResult.value = response.data.battle;
-    syncGame(response.data.game);
-    currentView.value = 'battle';
-    await scrollLog();
+        battleResult.value = response.data.battle;
+        syncGame(response.data.game);
+        currentView.value = 'battle';
+        await scrollLog();
+    } catch (error) {
+        showActionError(error);
+    }
 }
 
 async function startArenaFight(difficulty: 'easy' | 'medium' | 'hard'): Promise<void> {
@@ -605,16 +608,18 @@ async function scrollLog(): Promise<void> {
                                 class="map-location"
                                 :class="[location.type, { locked: location.locked }]"
                                 :style="{ left: location.x + '%', top: location.y + '%' }"
-                                :title="location.name"
+                                
                                 @click="enterLocation(location)"
                             >
-                                <span class="location-icon">{{ location.icon }}</span>
+                                <div class="location-text">
+                                    <span v-html="location.name"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div v-if="selectedLocation" class="location-info">
-                        <h3>{{ selectedLocation.icon }} {{ selectedLocation.name }}</h3>
+                        <h3 v-html="selectedLocation.name"></h3>
                         <p>{{ selectedLocation.description }}</p>
                         <div class="location-details">
                             <span v-if="selectedLocation.paCost">Koszt: {{ selectedLocation.paCost }} PA</span>
@@ -942,6 +947,7 @@ async function scrollLog(): Promise<void> {
                 <i v-for="stat in bonusRows(tooltipItem)" :key="stat.key" class="idesc">{{ stat.name }}: {{ stat.value }}{{ stat.suffix }}</i>
                 
                 <br/>
+                <i v-if="(tooltipItem.level ?? 1) > 1" class="idesc">Wymagany poziom: {{ tooltipItem.level }}</i>
                 <i v-if="tooltipItem.power" class="idesc">Moc przedmiotu: {{ tooltipItem.power }}</i>
                 <i class="idesc">Wartość: {{ tooltipItem.price }}</i>
             

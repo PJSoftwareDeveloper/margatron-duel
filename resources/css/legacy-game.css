@@ -374,11 +374,35 @@
   border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
+.location-text {
+  display: none;
+  text-align: center;
+  background-color: black;
+  color: gold;
+  font-size: 11px;
+  width: 100%;
+  margin-top: 40%;
+  height: 50%;
+  align-items: center;
+  justify-content: center;
+  
+}
+
+.location-text span{
+  margin-top: none;
+}
+
+.map-location:hover .location-text {
+  display: flex;
+}
+
+
 .map-location {
+  overflow: hidden;
   position: absolute;
   transform: translate(-50%, -50%);
-  width: 80px;
-  height: 70px;
+  width: 120px;
+  height: 100px;
   border: 2px solid rgba(255, 255, 255, 0.8);
   border-radius: 10px;
   background: transparent;
@@ -392,7 +416,7 @@
 
 .map-location:hover {
   transform: translate(-50%, -50%) scale(1.1);
-  border-color: #fff;
+  border-color: gold;
   box-shadow: 0 0 10px rgba(255,255,255,0.5);
   z-index: 10;
 }

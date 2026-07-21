@@ -19,14 +19,14 @@ final readonly class StaticGameCatalogRepository
         return [
             GameMap::Ithan->value => $this->buildMap(GameMap::Ithan, [
                 'locations' => [
-                    $this->battle('ithan-yss', 'Dolina Yss(6-10lvl)', 90, 7, 3, 6, 10, ['wolf', 'spider']),
-                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców(1-5lvl)', 46, 13, 1, 1, 5, ['goblin', 'rat']),
+                    $this->battle('ithan-yss', 'Dolina Yss<br/>Poziom 6-10', 90, 10, 3, 6, 10, ['wolf', 'spider']),
+                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców<br/>Poziom 1-5', 46, 13, 1, 1, 5, ['goblin', 'rat']),
                     //$this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
-                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 23.3, 27, 2),
+                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 23.3, 22, 2),
                     $this->shop('ithan-roan', 'Sklep Roana', 87.5, 70, 'blacksmith_1'),
-                    $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, 33.5, 76),
+                    $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, 33.5, 70),
                     $this->shop('ithan-makatara', 'Sklep Makatary', 8.6, 76, 'alchemist_1'),
-                    $this->buildLocation('ithan-world', 'Mapa Świata', LocationType::WorldMap, 46, 93),
+                    $this->buildLocation('ithan-world', 'Mapa Świata', LocationType::WorldMap, 46, 90),
                 ],
                 'enemies' => [
                     'goblin' => $this->enemy('Gaunt', 'gaunt.gif', 15, 1, 3, 6, 0),
@@ -38,13 +38,12 @@ final readonly class StaticGameCatalogRepository
                     'astratus' => $this->enemy('Astratus', 'astratus.gif', 100, 10, 30, 50, 50),
                     'werecatTracker' => $this->enemy('Kotołak Tropiciel', 'kotolak.gif', 100, 10, 30, 50, 50),
                 ],
-                'elite2Enemies' => [
-                    'riverLord' => $this->enemy('Władca rzek', 'wladca-rzek.gif', 150, 20, 50, 75, 60),
-                ],
+                'elite2Enemies' => [],
                 'heroEnemies' => [
                     'harrietTheDomina' => $this->enemy('Domina Ecclesiae', 'domina-ecclesiae.gif', 150, 30, 70, 180, 100),
                     'billyTheDrunkard' => $this->enemy('Mietek Żul', 'zulek.gif', 30, 10, 30, 100, 5),
                     'wickedPatrick' => $this->enemy('Mroczny Patryk', 'mroczny-patryk3.gif', 300, 30, 100, 300, 666),
+                    'spitefulGuide' => $this->enemy('Zły Przewodnik', 'mnich-zly-jacob.gif', 600, 50, 200, 400, 700),
                 ],
                 'arenaEnemies' => [
                     ArenaDifficulty::Easy->value => ['goblin', 'rat'],
@@ -54,19 +53,32 @@ final readonly class StaticGameCatalogRepository
             ]),
             GameMap::Torneg->value => $this->buildMap(GameMap::Torneg, [
                 'locations' => [
-                    $this->battle('torneg-mountain-cave', 'Górska Grota(11-15lvl)', 30.7, 7, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
-                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków(16-20lvl)', 95, 70, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
-                    $this->buildLocation('torneg-arena', 'Arena', LocationType::Arena, 60.5, 14, 3, ['levelReq' => 9]),
-                    $this->shop('torneg-syntia', 'Syntia', 75, 39, 'blacksmith_2'),
-                    $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, 82, 93),
-                    $this->shop('torneg-salome', 'Salome', 5, 53, 'alchemist_2'),
-                    $this->buildLocation('torneg-world', 'Mapa Świata', LocationType::WorldMap, 53, 93),
+                    $this->battle('torneg-mountain-cave', 'Górska Grota<br/>Poziom 11-15', 30.7, 10, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
+                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków<br/>Poziom 16-20lvl', 92, 70, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
+                    $this->buildLocation('torneg-arena', 'Arena', LocationType::Arena, 60.5, 10, 3, ['levelReq' => 9]),
+                    $this->shop('torneg-syntia', 'Sklep', 75, 39, 'blacksmith_2'),
+                    $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, 82, 90),
+                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 8, 45, 2),
+                    //$this->shop('torneg-salome', 'Salome', 8, 45, 'alchemist_2'),
+                    $this->buildLocation('torneg-world', 'Mapa Świata', LocationType::WorldMap, 53, 90),
                 ],
                 'enemies' => [
                     'dark_wolf' => $this->enemy('Mroczny Wilk', 'dark_wolf.gif', 55, 8, 14, 28, 4),
                     'pelzacz' => $this->enemy('Pełzacz', 'pelzacz.gif', 65, 9, 16, 32, 5),
                     'giant_spider' => $this->enemy('Olbrzymi Pająk', 'giant_spider.gif', 85, 13, 22, 48, 8),
                     'spider_queen' => $this->enemy('Królowa Pająków', 'spider_queen.gif', 110, 16, 27, 65, 12),
+                ],
+                'eliteEnemies' => [
+                    'astratus' => $this->enemy('Astratus', 'astratus.gif', 100, 10, 30, 50, 50),
+                    'werecatTracker' => $this->enemy('Kotołak Tropiciel', 'kotolak.gif', 100, 10, 30, 50, 50),
+                ],
+                'elite2Enemies' => [
+
+                ],
+                'heroEnemies' => [
+                    'harrietTheDomina' => $this->enemy('Domina Ecclesiae', 'domina-ecclesiae.gif', 150, 30, 70, 180, 100),
+                    'billyTheDrunkard' => $this->enemy('Mietek Żul', 'zulek.gif', 30, 10, 30, 100, 5),
+                    'wickedPatrick' => $this->enemy('Mroczny Patryk', 'mroczny-patryk3.gif', 300, 30, 100, 300, 666),
                 ],
                 'arenaEnemies' => [
                     ArenaDifficulty::Easy->value => ['dark_wolf', 'pelzacz'],
@@ -76,20 +88,26 @@ final readonly class StaticGameCatalogRepository
             ]),
             GameMap::KarkaHan->value => $this->buildMap(GameMap::KarkaHan, [
                 'locations' => [
-                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja(21-25lvl)', 31, 25, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('karka-zulu-settlement', 'Osada Zulusów(26-30lvl)', 5, 56, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja<br/>Poziom 21-25', 31, 23, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
+                    $this->battle('karka-zulu-settlement', 'Osada Zulusów<br/>Poziom 26-30', 8, 54, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
                     $this->buildLocation('karka-arena', 'Arena', LocationType::Arena, 73.2, 20, 3, ['levelReq' => 20]),
-                    $this->shop('karka-armorer', 'Płatnerz', 80, 58, 'blacksmith_2'),
+                    $this->shop('karka-armorer', 'Sklep', 75, 65, 'blacksmith_2'),
                     $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, 95, 7),
-                    $this->shop('karka-craftsman', 'Rzemieślnik', 14, 33, 'alchemist_2'),
-                    $this->buildLocation('karka-world', 'Mapa Świata', LocationType::WorldMap, 44, 93),
+                    $this->buildLocation('karka-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 14, 30, 2),
+                    
+                    //$this->shop('karka-craftsman', 'Rzemieślnik', 14, 30, 'alchemist_2'),
+                    $this->buildLocation('karka-world', 'Mapa Świata', LocationType::WorldMap, 44, 90),
                 ],
                 'enemies' => [
                     'zubr' => $this->enemy('Żubr', 'zubr.gif', 135, 21, 34, 92, 18),
                     'grzechotnik' => $this->enemy('Grzechotnik', 'grzechotnik.gif', 105, 24, 39, 96, 20),
                     'giant_spider' => $this->enemy('Olbrzymi Pająk', 'giant_spider.gif', 150, 28, 44, 118, 26),
+                ],
+                'eliteEnemies' => [
                     'spider_queen' => $this->enemy('Królowa Pająków', 'spider_queen.gif', 185, 34, 52, 150, 35),
                 ],
+                'elite2Enemies' => [],
+                'heroEnemies' => [],
                 'arenaEnemies' => [
                     ArenaDifficulty::Easy->value => ['zubr', 'grzechotnik'],
                     ArenaDifficulty::Medium->value => ['giant_spider', 'zubr'],
@@ -98,19 +116,27 @@ final readonly class StaticGameCatalogRepository
             ]),
             GameMap::Werbin->value => $this->buildMap(GameMap::Werbin, [
                 'locations' => [
-                    $this->battle('werbin-heaths', 'Wrzosowiska(31-35lvl)', 84, 7, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('werbin-goblin-forest', 'Las Goblinów(36-40lvl)', 95, 67, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('werbin-heaths', 'Wrzosowiska<br/>Poziom 31-35', 84, 10, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
+                    $this->battle('werbin-goblin-forest', 'Las Goblinów<br/>Poziom 36-40', 92, 63, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
                     $this->buildLocation('werbin-arena', 'Arena', LocationType::Arena, 29.2, 20, 3, ['levelReq' => 35]),
-                    $this->shop('werbin-armorer', 'Płatnerz', 39, 58, 'blacksmith_3'),
+                    $this->shop('werbin-armorer', 'Sklep', 39, 58, 'blacksmith_3'),
                     $this->buildLocation('werbin-inn', 'Karczma', LocationType::Rest, 70, 58),
-                    $this->shop('werbin-craftsman', 'Rzemieślnik', 8.4, 7, 'alchemist_3'),
-                    $this->buildLocation('werbin-world', 'Mapa Świata', LocationType::WorldMap, 44, 93),
+                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 8.4, 10, 2),
+                    //$this->shop('werbin-craftsman', 'Rzemieślnik', 8.4, 10, 'alchemist_3'),
+                    $this->buildLocation('werbin-world', 'Mapa Świata', LocationType::WorldMap, 44, 90),
                 ],
                 'enemies' => [
                     'zubr' => $this->enemy('Żubr', 'zubr.gif', 220, 42, 66, 210, 48),
                     'grzechotnik' => $this->enemy('Grzechotnik', 'grzechotnik.gif', 180, 48, 75, 225, 52),
                     'giant_spider' => $this->enemy('Olbrzymi Pająk', 'giant_spider.gif', 260, 55, 88, 280, 70),
                     'spider_queen' => $this->enemy('Królowa Pająków', 'spider_queen.gif', 330, 68, 105, 360, 90),
+                ],
+                'eliteEnemies' => [],
+                'elite2Enemies' => [
+                    'riverLord' => $this->enemy('Władca rzek', 'wladca-rzek.gif', 1500, 20, 50, 750, 400),
+                ],
+                'heroEnemies' => [
+                    'crimsonAvenger' => $this->enemy('Karmazynowy mściciel', 'gnom-msciciel2.gif', 2500, 20, 50, 1500, 650),
                 ],
                 'arenaEnemies' => [
                     ArenaDifficulty::Easy->value => ['zubr', 'grzechotnik'],
@@ -127,16 +153,16 @@ final readonly class StaticGameCatalogRepository
     public function worldMapPositions(): array
     {
         return [
-            ['id' => 1, 'x' => 42, 'y' => 49],
-            ['id' => 2, 'x' => 45, 'y' => 39],
-            ['id' => 3, 'x' => 56, 'y' => 48],
-            ['id' => 4, 'x' => 40, 'y' => 32],
-            ['id' => 5, 'x' => 51, 'y' => 34],
-            ['id' => 6, 'x' => 61, 'y' => 41],
-            ['id' => 7, 'x' => 34, 'y' => 43],
-            ['id' => 8, 'x' => 49, 'y' => 58],
-            ['id' => 9, 'x' => 58, 'y' => 61],
-            ['id' => 10, 'x' => 66, 'y' => 53],
+            ['id' => 1, 'x' => 58, 'y' => 12],
+            ['id' => 2, 'x' => 66, 'y' => 22],
+            ['id' => 3, 'x' => 48, 'y' => 13],
+            ['id' => 4, 'x' => 40, 'y' => 15],
+            ['id' => 5, 'x' => 53, 'y' => 22],
+            ['id' => 6, 'x' => 65, 'y' => 33],
+            ['id' => 7, 'x' => 37, 'y' => 29],
+            ['id' => 8, 'x' => 71, 'y' => 49],
+            ['id' => 9, 'x' => 23, 'y' => 73],
+            ['id' => 10, 'x' => 55, 'y' => 35],
         ];
     }
 
@@ -176,8 +202,16 @@ final readonly class StaticGameCatalogRepository
             ],
             'blacksmith_2' => [
                 'id' => 'blacksmith_2',
-                'name' => 'Płatnerz',
+                'name' => 'Sklep',
                 'items' => [
+                    $this->shopItem(501, 'Wielka mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 10, [], 0, ['type' => 'heal', 'value' => 150]),
+                    $this->shopItem(502, 'Epicka mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Heroic, 10, [], 400, ['type' => 'heal', 'value' => 300]),
+                    $this->shopItem(511, 'Duża butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 10, [], 250, ['type' => 'pa', 'value' => 15]),
+                    $this->shopItem(521, 'Potężny Eliksir Siły', 'items/strength.gif', ItemType::Potion, ItemRarity::Heroic, 12, ['strength' => 8], 400, ['type' => 'buff_strength', 'value' => 8]),
+                    $this->shopItem(522, 'Eliksir Krytyka', 'items/crit.gif', ItemType::Potion, ItemRarity::Unique, 10, ['critChance' => 15], 300, ['type' => 'buff_crit', 'value' => 15]),
+                    $this->shopItem(523, 'Legendarny Eliksir Mocy', 'items/crit.gif', ItemType::Potion, ItemRarity::Legendary, 15, [], 1000, ['type' => 'buff_all', 'value' => 10]),
+                    $this->shopItem(531, 'Mikstura Ochrony', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 10, ['armor' => 15], 250, ['type' => 'buff_armor', 'value' => 15]),
+                
                     $this->shopItem(401, 'Mroczny Miecz', 'items/sword.gif', ItemType::Weapon, ItemRarity::Common, 10, ['dmgMin' => 12, 'dmgMax' => 20], 800),
                     $this->shopItem(402, 'Topór Cienia', 'items/axe.gif', ItemType::Weapon, ItemRarity::Common, 12, ['dmgMin' => 15, 'dmgMax' => 25], 1200),
                     $this->shopItem(403, 'Bohaterski Młot', 'items/hammer.gif', ItemType::Weapon, ItemRarity::Heroic, 15, ['dmgMin' => 18, 'dmgMax' => 30, 'critChance' => 5, 'critPower' => 15], 2500),
@@ -204,8 +238,11 @@ final readonly class StaticGameCatalogRepository
             ],
             'blacksmith_3' => [
                 'id' => 'blacksmith_3',
-                'name' => 'Płatnerz',
+                'name' => 'Sklep',
                 'items' => [
+                    $this->shopItem(701, 'Smoczy Eliksir Życia', 'items/health.gif', ItemType::Potion, ItemRarity::Legendary, 25, [], 800, ['type' => 'heal', 'value' => 500]),
+                    $this->shopItem(702, 'Krew Smoka', 'items/strength.gif', ItemType::Potion, ItemRarity::Legendary, 30, [], 2000, ['type' => 'buff_all', 'value' => 20]),
+                
                     $this->shopItem(601, 'Smocza Kosa', 'items/spear.gif', ItemType::Weapon, ItemRarity::Heroic, 20, ['dmgMin' => 30, 'dmgMax' => 50, 'critChance' => 7, 'critPower' => 20], 5000),
                     $this->shopItem(602, 'Boski Miecz Zagłady', 'items/sword.gif', ItemType::Weapon, ItemRarity::Legendary, 25, ['dmgMin' => 45, 'dmgMax' => 70, 'critChance' => 12, 'critPower' => 35, 'doubleDamage' => 8], 15000),
                     $this->shopItem(611, 'Smocza Łuska', 'items/plate.gif', ItemType::Armor, ItemRarity::Legendary, 22, ['armor' => 70, 'hp' => 80, 'dodge' => 7, 'doubleArmor' => 8], 18000),

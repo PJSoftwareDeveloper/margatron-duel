@@ -118,15 +118,22 @@ final readonly class BattleService
 
 
             $enemyTag = 'none';
+            $difficulty = ArenaDifficulty::Easy;
             switch($enemyType){
                 case 'elite':
                     $enemyTag = 'eliteEnemies';
+                    $level = $map['levelRange']['min'];
+                    $difficulty = ArenaDifficulty::Easy;
                     break;
                 case 'elite2':
                     $enemyTag = 'elite2Enemies';
+                    $level = $map['levelRange']['min'] + 5;
+                    $difficulty = ArenaDifficulty::Medium;
                     break;
                 case 'hero':
                     $enemyTag = 'heroEnemies';
+                    $level = $map['levelRange']['max'];
+                    $difficulty = ArenaDifficulty::Hard;
                     break;
             }
             $enemyKeys = array_keys($map[$enemyTag]);
@@ -134,12 +141,11 @@ final readonly class BattleService
                 throw new DomainException('Walka z przeciwnikiem na tej mapie jest niedostępna.');
             }
             $enemyKey = $enemyKeys[array_rand($enemyKeys)];
-            $level = $map['levelRange']['min'];
             $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level, $enemyTag);
             $result = $this->runAutoBattle($profile, $enemy, "Walka z silnym przeciwnikiem");
 
             if ($result['won']) {
-                $this->applyVictory($profile, $enemy, $result);
+                $this->applyVictory($profile, $enemy, $result, $difficulty);
             } else {
                 $this->applyDefeat($profile, $result);
             }
