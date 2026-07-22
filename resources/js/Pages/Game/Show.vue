@@ -618,18 +618,24 @@ async function scrollLog(): Promise<void> {
                                 @click="enterLocation(location)"
                             >
                                 <div class="location-text">
-                                    <span v-html="location.name"></span>
+                                    <span class="location-name">{{ location.name }}</span>
+                                    <span v-if="location.levelMin !== undefined && location.levelMax !== undefined" class="location-level">
+                                        Poziom {{ location.levelMin }}-{{ location.levelMax }}
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div v-if="selectedLocation" class="location-info">
-                        <h3 v-html="selectedLocation.name"></h3>
+                        <h3>{{ selectedLocation.name }}</h3>
                         <p>{{ selectedLocation.description }}</p>
                         <div class="location-details">
                             <span v-if="selectedLocation.paCost">Koszt: {{ selectedLocation.paCost }} PA</span>
                             <span v-if="selectedLocation.levelReq">Wymagany poziom: {{ selectedLocation.levelReq }}</span>
+                            <span v-if="selectedLocation.levelMin !== undefined && selectedLocation.levelMax !== undefined">
+                                Poziom przeciwników: {{ selectedLocation.levelMin }}-{{ selectedLocation.levelMax }}
+                            </span>
                         </div>
                         <button class="btn-enter" :disabled="!canEnterLocation(selectedLocation)" @click="confirmEnterLocation">
                             {{ getEnterButtonText(selectedLocation) }}

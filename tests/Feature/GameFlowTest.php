@@ -94,6 +94,9 @@ final class GameFlowTest extends TestCase
             ->assertJsonPath('battle.log.1.type', 'attack')
             ->assertJsonPath('battle.log.1.actor', 'player')
             ->assertJsonPath('battle.log.1.target', 'enemy')
+            ->assertJsonPath('game.currentMap.locations.1.name', 'Jaskinia Łowców')
+            ->assertJsonPath('game.currentMap.locations.1.levelMin', 1)
+            ->assertJsonPath('game.currentMap.locations.1.levelMax', 5)
             ->assertJsonStructure([
                 'battle' => ['name', 'enemy', 'won', 'log', 'rewards'],
                 'game' => ['user', 'currentMap', 'worldMaps', 'shops'],

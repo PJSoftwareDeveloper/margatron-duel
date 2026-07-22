@@ -376,6 +376,7 @@
 
 .location-text {
   display: none;
+  flex-direction: column;
   text-align: center;
   background-color: black;
   color: gold;
@@ -389,7 +390,11 @@
 }
 
 .location-text span{
-  margin-top: none;
+  margin-top: 0;
+}
+
+.location-level {
+  font-size: 10px;
 }
 
 .map-location:hover .location-text {

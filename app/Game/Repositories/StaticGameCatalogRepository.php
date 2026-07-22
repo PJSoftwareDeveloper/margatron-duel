@@ -19,8 +19,8 @@ final readonly class StaticGameCatalogRepository
         return [
             GameMap::Ithan->value => $this->buildMap(GameMap::Ithan, [
                 'locations' => [
-                    $this->battle('ithan-yss', 'Dolina Yss<br/>Poziom 6-10', 90, 10, 3, 6, 10, ['wolf', 'spider']),
-                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców<br/>Poziom 1-5', 46, 13, 1, 1, 5, ['goblin', 'rat']),
+                    $this->battle('ithan-yss', 'Dolina Yss', 90, 10, 3, 6, 10, ['wolf', 'spider']),
+                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', 46, 13, 1, 1, 5, ['goblin', 'rat']),
                     //$this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
                     $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 23.3, 22, 2),
                     $this->shop('ithan-roan', 'Sklep Roana', 87.5, 70, 'blacksmith_1'),
@@ -53,8 +53,8 @@ final readonly class StaticGameCatalogRepository
             ]),
             GameMap::Torneg->value => $this->buildMap(GameMap::Torneg, [
                 'locations' => [
-                    $this->battle('torneg-mountain-cave', 'Górska Grota<br/>Poziom 11-15', 30.7, 10, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
-                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków<br/>Poziom 16-20lvl', 92, 70, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('torneg-mountain-cave', 'Górska Grota', 30.7, 10, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
+                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków', 92, 70, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
                     $this->buildLocation('torneg-arena', 'Arena', LocationType::Arena, 60.5, 10, 3, ['levelReq' => 9]),
                     $this->shop('torneg-syntia', 'Sklep', 75, 39, 'blacksmith_2'),
                     $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, 82, 90),
@@ -88,8 +88,8 @@ final readonly class StaticGameCatalogRepository
             ]),
             GameMap::KarkaHan->value => $this->buildMap(GameMap::KarkaHan, [
                 'locations' => [
-                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja<br/>Poziom 21-25', 31, 23, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('karka-zulu-settlement', 'Osada Zulusów<br/>Poziom 26-30', 8, 54, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja', 31, 23, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
+                    $this->battle('karka-zulu-settlement', 'Osada Zulusów', 8, 54, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
                     $this->buildLocation('karka-arena', 'Arena', LocationType::Arena, 73.2, 20, 3, ['levelReq' => 20]),
                     $this->shop('karka-armorer', 'Sklep', 75, 65, 'blacksmith_2'),
                     $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, 95, 7),
@@ -116,8 +116,8 @@ final readonly class StaticGameCatalogRepository
             ]),
             GameMap::Werbin->value => $this->buildMap(GameMap::Werbin, [
                 'locations' => [
-                    $this->battle('werbin-heaths', 'Wrzosowiska<br/>Poziom 31-35', 84, 10, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('werbin-goblin-forest', 'Las Goblinów<br/>Poziom 36-40', 92, 63, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('werbin-heaths', 'Wrzosowiska', 84, 10, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
+                    $this->battle('werbin-goblin-forest', 'Las Goblinów', 92, 63, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
                     $this->buildLocation('werbin-arena', 'Arena', LocationType::Arena, 29.2, 20, 3, ['levelReq' => 35]),
                     $this->shop('werbin-armorer', 'Sklep', 39, 58, 'blacksmith_3'),
                     $this->buildLocation('werbin-inn', 'Karczma', LocationType::Rest, 70, 58),
