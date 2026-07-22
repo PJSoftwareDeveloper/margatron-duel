@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BattleLogEntry from '@/Components/Game/BattleLogEntry.vue';
 import GameTopBar from '@/Components/Game/GameTopBar.vue';
 import PlayerSidebar from '@/Components/Game/PlayerSidebar.vue';
 import { Head } from '@inertiajs/vue3';
@@ -22,6 +23,7 @@ const selectedLocation = ref<Location | null>(null);
 const selectedBattleLocation = ref<Location | null>(null);
 const lastBattleStage = ref<number | null>(null);
 const battleResult = ref<BattleResult | null>(null);
+const canContinueBattle = computed(() => battleResult.value?.won === true && lastBattleStage.value !== null);
 const currentShopId = ref<string | null>(null);
 const shopTab = ref<'buy' | 'sell'>('buy');
 const showSettings = ref(false);
@@ -400,10 +402,12 @@ async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean 
 
 
 async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<void> {
-        console.log(selectedBattleLocation.value);
     if (!selectedBattleLocation.value) {
         return;
     }
+
+    lastBattleStage.value = null;
+
     try{
         const response = await axios.post('/game/actions/battle/tough', {
             locationId: selectedBattleLocation.value.id,
@@ -420,6 +424,7 @@ async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<
 }
 
 async function startArenaFight(difficulty: 'easy' | 'medium' | 'hard'): Promise<void> {
+    lastBattleStage.value = null;
     const response = await axios.post('/game/actions/battle/arena', { difficulty });
     battleResult.value = response.data.battle;
     syncGame(response.data.game);
@@ -446,6 +451,7 @@ async function startNextBattle(): Promise<void> {
 
 function closeBattle(): void {
     battleResult.value = null;
+    lastBattleStage.value = null;
     currentView.value = 'map';
 }
 
@@ -721,16 +727,11 @@ async function scrollLog(): Promise<void> {
                     <div class="battle-main-layout">
                         <div class="battle-log-container">
                             <div ref="logScroll" class="battle-log-scroll">
-                                <div
+                                <BattleLogEntry
                                     v-for="(log, i) in battleResult?.log ?? []"
                                     :key="i"
-                                    :class="['log-entry', log.type]"
-                                    :style="log.color ? { color: log.color } : {}"
-                                >
-                                    <img v-if="log.type =='player-attack'" :src="getItemImage(`items/miecz05_pol.gif`)" alt="">
-                                    <img v-if="log.type =='enemy-attack'" :src="getItemImage(`items/tar_tarcza09.gif`)" alt="">
-                                    <span class="log-text" v-html="log.text"></span>
-                                </div>
+                                    :log="log"
+                                />
                             </div>
                         </div>
 
@@ -753,7 +754,7 @@ async function scrollLog(): Promise<void> {
                                     <span v-else class="lose">Walka przegrana</span>
                                 </div>
                                 <div class="battle-buttons">
-                                    <button v-if="battleResult?.won && lastBattleStage?.value != null" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
+                                    <button v-if="canContinueBattle" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
                                     <button class="btn-battle-action" @click="closeBattle">Wróć do mapy</button>
                                 </div>
                             </div>

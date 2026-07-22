@@ -165,7 +165,10 @@ final readonly class BattleService
         $playerHp = max(1, $profile->hp);
         $enemyHp = (int) $enemy['hp'];
         $log = [
-            ['text' => "Walka z {$enemy['name']} została rozpoczęta!", 'type' => 'info'],
+            [
+                'type' => 'battle-start',
+                'enemyName' => (string) $enemy['name'],
+            ],
         ];
 
         for ($turn = 1; $turn <= 100; $turn++) {
@@ -174,10 +177,14 @@ final readonly class BattleService
             $finalDmg = $isCrit ? (int) floor($playerDmg * ($profile->crit_power / 100)) : $playerDmg;
             $enemyHp = max(0, $enemyHp - $finalDmg);
             $log[] = [
-                
-                'text' => "<b class=\"player-attack\">Zadałeś</b> przeciwnikowi {$finalDmg} obrażeń.
-                <b class=\"enemy-attack\">{$enemy['name']}</b> otrzymał {$finalDmg} obrażeń, {$enemyHp} pz pozostało.".($isCrit ? ' KRYTYK!' : ''),
-                'type' => 'player-attack',
+                'type' => 'attack',
+                'actor' => 'player',
+                'target' => 'enemy',
+                'targetName' => (string) $enemy['name'],
+                'attackPower' => $playerDmg,
+                'damage' => $finalDmg,
+                'remainingHp' => $enemyHp,
+                'critical' => $isCrit,
             ];
 
             if ($enemyHp <= 0) {
@@ -188,15 +195,25 @@ final readonly class BattleService
             $dodged = $this->percentRoll() < $profile->dodge;
 
             if ($dodged) {
-                $log[] = ['text' => 'Unikasz ataku!', 'type' => 'dodge'];
+                $log[] = [
+                    'type' => 'dodge',
+                    'actor' => 'player',
+                    'attacker' => 'enemy',
+                    'attackerName' => (string) $enemy['name'],
+                ];
             } else {
                 $reducedDmg = max(0, $enemyDmg - (int) floor($profile->armor));
                 $playerHp = max(0, $playerHp - $reducedDmg);
                 $log[] = [
-                    'text' => "<b class=\"enemy-attack\">{$enemy['name']}</b> uderzył z siłą {$enemyDmg} obrażeń.
-                    Obecny pancerz: {$profile->armor}
-                    <b class=\"player-attack\">Otrzymałeś</b> {$reducedDmg} obrażeń, {$playerHp} pozostało.",
-                    'type' => 'enemy-attack',
+                    'type' => 'attack',
+                    'actor' => 'enemy',
+                    'actorName' => (string) $enemy['name'],
+                    'target' => 'player',
+                    'attackPower' => $enemyDmg,
+                    'armor' => (int) $profile->armor,
+                    'damage' => $reducedDmg,
+                    'remainingHp' => $playerHp,
+                    'critical' => false,
                 ];
             }
 
@@ -210,7 +227,7 @@ final readonly class BattleService
 
     /**
      * @param  array<string, mixed>  $enemy
-     * @param  array<int, array<string, string>>  $log
+     * @param  array<int, array<string, mixed>>  $log
      * @return array<string, mixed>
      */
     private function result(string $name, array $enemy, bool $won, int $playerHp, int $enemyHp, array $log, ?ArenaDifficulty $arenaDifficulty): array
@@ -256,15 +273,30 @@ final readonly class BattleService
         $result['rewards']['level'] = $levelResult;
         $result['rewards']['drop'] = $drop;
         $result['rewards']['dropAdded'] = $dropAdded;
-        $result['log'][] = ['text' => "Doświadczenie: {$enemy['exp']}p", 'type' => 'reward'];
+        $result['log'][] = [
+            'type' => 'reward',
+            'rewardType' => 'experience',
+            'amount' => (int) $enemy['exp'],
+        ];
 
         if ($levelResult['leveledUp']) {
-            $result['log'][] = ['text' => "Awansujesz na poziom {$levelResult['newLevel']}!", 'type' => 'levelup'];
-            $result['log'][] = ['text' => "+{$levelResult['levelsGained']} poziom, +".($levelResult['levelsGained'] * 2).' punkty atrybutów', 'type' => 'info'];
+            $result['log'][] = [
+                'type' => 'level-up',
+                'level' => (int) $levelResult['newLevel'],
+            ];
+            $result['log'][] = [
+                'type' => 'attribute-points',
+                'levelsGained' => (int) $levelResult['levelsGained'],
+                'points' => (int) $levelResult['levelsGained'] * 2,
+            ];
         }
 
         if ($drop) {
-            $result['log'][] = ['text' => "Zdobyto: {$drop['name']}!", 'type' => 'drop', 'color' => $drop['rarityColor']];
+            $result['log'][] = [
+                'type' => 'drop',
+                'itemName' => (string) $drop['name'],
+                'color' => (string) $drop['rarityColor'],
+            ];
         }
     }
 
@@ -275,7 +307,7 @@ final readonly class BattleService
     {
         $profile->hp = max(1, (int) floor($profile->hp_max * 0.3));
         $profile->save();
-        $result['log'][] = ['text' => 'Zostałeś pokonany!', 'type' => 'defeat'];
+        $result['log'][] = ['type' => 'defeat'];
     }
 
     /**

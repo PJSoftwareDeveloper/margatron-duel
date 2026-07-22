@@ -90,10 +90,16 @@ final class GameFlowTest extends TestCase
         $response
             ->assertOk()
             ->assertJsonPath('game.user.pa', 19)
+            ->assertJsonPath('battle.log.0.type', 'battle-start')
+            ->assertJsonPath('battle.log.1.type', 'attack')
+            ->assertJsonPath('battle.log.1.actor', 'player')
+            ->assertJsonPath('battle.log.1.target', 'enemy')
             ->assertJsonStructure([
                 'battle' => ['name', 'enemy', 'won', 'log', 'rewards'],
                 'game' => ['user', 'currentMap', 'worldMaps', 'shops'],
-            ]);
+            ])
+            ->assertJsonMissingPath('battle.log.0.text')
+            ->assertJsonMissingPath('battle.log.1.text');
 
         $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
 
