@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Mate+SC&family=Merriweather:wght@400;700&display=swap');
 @import './legacy-home.css';
 @import './legacy-game.css';
+@import './tips.css';
 
 html,
 body,

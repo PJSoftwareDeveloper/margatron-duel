@@ -100,7 +100,7 @@ export type Stage = {
 export type Location = {
     id: string;
     name: string;
-    type: 'battle' | 'arena' | 'shop' | 'rest' | 'worldmap';
+    type: 'battle' | 'arena' | 'elite' | 'shop' | 'rest' | 'worldmap';
     x: number;
     y: number;
     pa?: number;
@@ -187,11 +187,53 @@ export type PlayerAchievements = {
     overallPercent: number;
 };
 
-export type BattleLog = {
-    text: string;
-    type: string;
-    color?: string;
-};
+export type BattleParticipant = 'player' | 'enemy';
+
+export type BattleLog =
+    | {
+        type: 'battle-start';
+        enemyName: string;
+    }
+    | {
+        type: 'attack';
+        actor: BattleParticipant;
+        actorName?: string;
+        target: BattleParticipant;
+        targetName?: string;
+        attackPower: number;
+        damage: number;
+        remainingHp: number;
+        armor?: number;
+        critical: boolean;
+    }
+    | {
+        type: 'dodge';
+        actor: 'player';
+        attacker: 'enemy';
+        attackerName: string;
+    }
+    | {
+        type: 'reward';
+        rewardType: 'experience';
+        amount: number;
+    }
+    | {
+        type: 'level-up';
+        level: number;
+    }
+    | {
+        type: 'attribute-points';
+        levelsGained: number;
+        points: number;
+    }
+    | {
+        type: 'drop';
+        itemName: string;
+        color: string;
+    }
+    | {
+        type: 'defeat';
+    };
 
 export type BattleResult = {
     name: string;
