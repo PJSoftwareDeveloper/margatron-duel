@@ -63,7 +63,7 @@ final class GameFlowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Game/Show')
-                ->where('app.version', '0.1.0')
+                ->where('app.version', '0.1.2')
                 ->has('game.data.user')
                 ->where('game.data.user.level', 1)
                 ->where('game.data.currentMap.name', 'Ithan')

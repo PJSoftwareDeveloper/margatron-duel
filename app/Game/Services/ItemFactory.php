@@ -13,7 +13,6 @@ final readonly class ItemFactory
         private StaticGameCatalogRepository $catalog,
     ) {}
 
-
     /**
      * @return array<string, mixed>|null
      */
@@ -23,7 +22,7 @@ final readonly class ItemFactory
         $percentRollValue = $this->percentRoll();
         if ($percentRollValue > $dropChance) {
             return null;
-        } 
+        }
 
         return $this->generate($enemyLevel, luckBonus: $playerLuck, arenaDifficulty: $arenaDifficulty);
     }

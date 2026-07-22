@@ -11,13 +11,13 @@ use App\Game\Services\GameStateService;
 use App\Game\Services\InventoryService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Game\ArenaBattleRequest;
-use App\Http\Requests\Game\ToughBattleRequest;
 use App\Http\Requests\Game\AttributeRequest;
 use App\Http\Requests\Game\BuyItemRequest;
 use App\Http\Requests\Game\BuyPaRequest;
 use App\Http\Requests\Game\InventorySlotRequest;
 use App\Http\Requests\Game\RestRequest;
 use App\Http\Requests\Game\StageBattleRequest;
+use App\Http\Requests\Game\ToughBattleRequest;
 use App\Http\Requests\Game\UnequipRequest;
 use App\Http\Requests\Game\WorldMapRequest;
 use App\Http\Resources\BattleResultResource;
@@ -44,7 +44,7 @@ final class GameActionController extends Controller
             ArenaDifficulty::from($request->string('difficulty')->toString()),
         ));
     }
-    
+
     public function toughBattle(ToughBattleRequest $request, GameProfileService $profiles, GameStateService $gameState, ActionPointRegenerationScheduler $actionPoints, BattleService $battles): JsonResponse
     {
         return $this->respondWithBattle($request, $profiles, $gameState, $actionPoints, fn ($profile) => $battles->fightToughEnemy(

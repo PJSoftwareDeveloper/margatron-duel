@@ -116,10 +116,9 @@ final readonly class BattleService
 
             $this->spendPa($profile, (int) ($location['pa'] ?? 1));
 
-
             $enemyTag = 'none';
             $difficulty = ArenaDifficulty::Easy;
-            switch($enemyType){
+            switch ($enemyType) {
                 case 'elite':
                     $enemyTag = 'eliteEnemies';
                     $level = $map['levelRange']['min'];
@@ -142,7 +141,7 @@ final readonly class BattleService
             }
             $enemyKey = $enemyKeys[array_rand($enemyKeys)];
             $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level, $enemyTag);
-            $result = $this->runAutoBattle($profile, $enemy, "Walka z silnym przeciwnikiem");
+            $result = $this->runAutoBattle($profile, $enemy, 'Walka z silnym przeciwnikiem');
 
             if ($result['won']) {
                 $this->applyVictory($profile, $enemy, $result, $difficulty);
@@ -153,7 +152,6 @@ final readonly class BattleService
             return $result;
         });
     }
-
 
     /**
      * @param  array<string, mixed>  $enemy
@@ -335,7 +333,6 @@ final readonly class BattleService
         $profile->pa_regenerated_at = now();
         $profile->save();
     }
-
 
     private function percentRoll(): float
     {

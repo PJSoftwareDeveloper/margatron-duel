@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Game;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 final class ToughBattleRequest extends FormRequest
 {
@@ -18,7 +17,7 @@ final class ToughBattleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'locationId' => ['required', 'string']
+            'locationId' => ['required', 'string'],
         ];
     }
 }

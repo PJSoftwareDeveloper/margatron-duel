@@ -21,7 +21,7 @@ final readonly class StaticGameCatalogRepository
                 'locations' => [
                     $this->battle('ithan-yss', 'Dolina Yss', 90, 10, 3, 6, 10, ['wolf', 'spider']),
                     $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', 46, 13, 1, 1, 5, ['goblin', 'rat']),
-                    //$this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
+                    // $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
                     $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 23.3, 22, 2),
                     $this->shop('ithan-roan', 'Sklep Roana', 87.5, 70, 'blacksmith_1'),
                     $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, 33.5, 70),
@@ -59,7 +59,7 @@ final readonly class StaticGameCatalogRepository
                     $this->shop('torneg-syntia', 'Sklep', 75, 39, 'blacksmith_2'),
                     $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, 82, 90),
                     $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 8, 45, 2),
-                    //$this->shop('torneg-salome', 'Salome', 8, 45, 'alchemist_2'),
+                    // $this->shop('torneg-salome', 'Salome', 8, 45, 'alchemist_2'),
                     $this->buildLocation('torneg-world', 'Mapa Świata', LocationType::WorldMap, 53, 90),
                 ],
                 'enemies' => [
@@ -94,8 +94,8 @@ final readonly class StaticGameCatalogRepository
                     $this->shop('karka-armorer', 'Sklep', 75, 65, 'blacksmith_2'),
                     $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, 95, 7),
                     $this->buildLocation('karka-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 14, 30, 2),
-                    
-                    //$this->shop('karka-craftsman', 'Rzemieślnik', 14, 30, 'alchemist_2'),
+
+                    // $this->shop('karka-craftsman', 'Rzemieślnik', 14, 30, 'alchemist_2'),
                     $this->buildLocation('karka-world', 'Mapa Świata', LocationType::WorldMap, 44, 90),
                 ],
                 'enemies' => [
@@ -122,7 +122,7 @@ final readonly class StaticGameCatalogRepository
                     $this->shop('werbin-armorer', 'Sklep', 39, 58, 'blacksmith_3'),
                     $this->buildLocation('werbin-inn', 'Karczma', LocationType::Rest, 70, 58),
                     $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 8.4, 10, 2),
-                    //$this->shop('werbin-craftsman', 'Rzemieślnik', 8.4, 10, 'alchemist_3'),
+                    // $this->shop('werbin-craftsman', 'Rzemieślnik', 8.4, 10, 'alchemist_3'),
                     $this->buildLocation('werbin-world', 'Mapa Świata', LocationType::WorldMap, 44, 90),
                 ],
                 'enemies' => [
@@ -191,7 +191,7 @@ final readonly class StaticGameCatalogRepository
                 'name' => 'Sklep Makatary',
                 'items' => [
                     $this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
-                   
+
                     $this->shopItem(301, 'Mała mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'heal', 'value' => 20]),
                     $this->shopItem(302, 'Średnia mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 3, [], 80, ['type' => 'heal', 'value' => 50]),
                     $this->shopItem(303, 'Duża mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 5, [], 150, ['type' => 'heal', 'value' => 100]),
@@ -211,7 +211,7 @@ final readonly class StaticGameCatalogRepository
                     $this->shopItem(522, 'Eliksir Krytyka', 'items/crit.gif', ItemType::Potion, ItemRarity::Unique, 10, ['critChance' => 15], 300, ['type' => 'buff_crit', 'value' => 15]),
                     $this->shopItem(523, 'Legendarny Eliksir Mocy', 'items/crit.gif', ItemType::Potion, ItemRarity::Legendary, 15, [], 1000, ['type' => 'buff_all', 'value' => 10]),
                     $this->shopItem(531, 'Mikstura Ochrony', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 10, ['armor' => 15], 250, ['type' => 'buff_armor', 'value' => 15]),
-                
+
                     $this->shopItem(401, 'Mroczny Miecz', 'items/sword.gif', ItemType::Weapon, ItemRarity::Common, 10, ['dmgMin' => 12, 'dmgMax' => 20], 800),
                     $this->shopItem(402, 'Topór Cienia', 'items/axe.gif', ItemType::Weapon, ItemRarity::Common, 12, ['dmgMin' => 15, 'dmgMax' => 25], 1200),
                     $this->shopItem(403, 'Bohaterski Młot', 'items/hammer.gif', ItemType::Weapon, ItemRarity::Heroic, 15, ['dmgMin' => 18, 'dmgMax' => 30, 'critChance' => 5, 'critPower' => 15], 2500),
@@ -242,7 +242,7 @@ final readonly class StaticGameCatalogRepository
                 'items' => [
                     $this->shopItem(701, 'Smoczy Eliksir Życia', 'items/health.gif', ItemType::Potion, ItemRarity::Legendary, 25, [], 800, ['type' => 'heal', 'value' => 500]),
                     $this->shopItem(702, 'Krew Smoka', 'items/strength.gif', ItemType::Potion, ItemRarity::Legendary, 30, [], 2000, ['type' => 'buff_all', 'value' => 20]),
-                
+
                     $this->shopItem(601, 'Smocza Kosa', 'items/spear.gif', ItemType::Weapon, ItemRarity::Heroic, 20, ['dmgMin' => 30, 'dmgMax' => 50, 'critChance' => 7, 'critPower' => 20], 5000),
                     $this->shopItem(602, 'Boski Miecz Zagłady', 'items/sword.gif', ItemType::Weapon, ItemRarity::Legendary, 25, ['dmgMin' => 45, 'dmgMax' => 70, 'critChance' => 12, 'critPower' => 35, 'doubleDamage' => 8], 15000),
                     $this->shopItem(611, 'Smocza Łuska', 'items/plate.gif', ItemType::Armor, ItemRarity::Legendary, 22, ['armor' => 70, 'hp' => 80, 'dodge' => 7, 'doubleArmor' => 8], 18000),
