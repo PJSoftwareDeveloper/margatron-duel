@@ -15,6 +15,7 @@ type GameView = 'map' | 'battleSelection' | 'arena' | 'toughenemy' | 'battle' | 
 
 const props = defineProps<{
     game: Resource<GameSnapshot>;
+   
 }>();
 
 const game = ref(unwrap(props.game));
@@ -41,6 +42,7 @@ let actionPointFlashTimer: number | undefined;
 let restCountdownTimer: number | undefined;
 let restRefreshTimer: number | undefined;
 let isGameViewDisposed = false;
+let stageCount: number | null = null;
 const actionPointChannel = `users.${game.value.user.id}`;
 const actionPointFallbackGraceMs = 2000;
 const restFallbackGraceMs = 1500;
@@ -390,12 +392,13 @@ async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean 
     if (stage.locked || !selectedBattleLocation.value) {
         return;
     }
-
+    if (stageCount == null) stageCount = 10;
     lastBattleStage.value = stage.stage;
     const response = await axios.post('/game/actions/battle/stage', {
         locationId: selectedBattleLocation.value.id,
         stage: stage.stage,
     });
+    stageCount -= 1;
     battleResult.value = response.data.battle;
     syncGame(response.data.game);
     currentView.value = 'battle';
@@ -435,6 +438,7 @@ async function startArenaFight(difficulty: 'easy' | 'medium' | 'hard'): Promise<
 }
 
 async function startNextBattle(): Promise<void> {
+    
     if (!selectedBattleLocation.value || !lastBattleStage.value) {
         closeBattle();
         return;
@@ -451,11 +455,11 @@ async function startNextBattle(): Promise<void> {
 }
 
 async function closeBattle(): Promise<void> {
+    stageCount = null;
     battleResult.value = null;
     lastBattleStage.value = null;
     currentView.value = 'map';
     selectedLocation.value = null;
-    await action('/game/actions/heal',{});
 }
 
 async function action(url: string, data: Record<string, unknown> = {}): Promise<void> {
@@ -754,7 +758,9 @@ async function scrollLog(): Promise<void> {
                         </div>
 
                         <div class="battle-visuals" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
-                            <div class="enemy-container">
+                            
+                            <div v-if="stageCount != null && stageCount <= 0" class="battle-info">Wyprawa zakończona</div>
+                            <div v-else class="enemy-container">
                                 <img v-if="battleResult?.enemy.imageUrl" :src="battleResult.enemy.imageUrl" :alt="battleResult.enemy.name" class="enemy-image-pixel">
                             </div>
 
@@ -772,7 +778,7 @@ async function scrollLog(): Promise<void> {
                                     <span v-else class="lose">Walka przegrana</span>
                                 </div>
                                 <div class="battle-buttons">
-                                    <button v-if="canContinueBattle" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
+                                    <button v-if="canContinueBattle && stageCount != null && stageCount > 0" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
                                     <button class="btn-battle-action" @click="closeBattle">Wróć do mapy</button>
                                 </div>
                             </div>

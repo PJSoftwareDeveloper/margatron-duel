@@ -103,13 +103,25 @@ final readonly class ItemFactory
     private function rollRarity(int $luckBonus, ?ArenaDifficulty $arenaDifficulty): ItemRarity
     {
         $chances = $this->catalog->baseDropChances();
-        $luckMod = $luckBonus / 2;
+        $luckMod = sqrt($luckBonus)*2;
         $arenaBonus = $arenaDifficulty?->rarityBonus() ?? 0;
 
-        $legendaryChance = $chances[ItemRarity::Legendary->value] + ($luckMod * 0.1) + ($arenaBonus * 0.2);
-        $heroicChance = $chances[ItemRarity::Heroic->value] + $luckMod * 0.3 + ($arenaBonus * 0.3) - $legendaryChance;
-        $uniqueChance = $chances[ItemRarity::Unique->value] + $luckMod * 0.6 + ($arenaBonus * 0.5) - $heroicChance - $legendaryChance;
+        $legendaryBonus = $chances[ItemRarity::Legendary->value] + ($luckMod * 0.1) + ($arenaBonus * 0.1);
+        $heroicBonus = $chances[ItemRarity::Heroic->value] + ($luckMod * 0.3) + ($arenaBonus * 0.3);
+        $uniqueBonus = $chances[ItemRarity::Unique->value] + ($luckMod * 0.6) + ($arenaBonus * 0.5);
+
+        $legendaryChance = ($legendaryBonus) <= 100 ? $legendaryBonus : 100;
+
+        $heroicChance = ($legendaryChance + $heroicBonus) <= 100 ? $heroicBonus : 
+            ((100 - $legendaryChance) >= 0 ? (100 - $legendaryChance) : 0);
+        
+        $uniqueChance = ($legendaryChance + $heroicChance + $uniqueBonus) <= 100 ? $uniqueBonus : 
+            ((100 - $legendaryChance - $heroicChance) >= 0 ? (100 - $legendaryChance - $heroicChance) : 0);
+
+
         $commonChance = 100 - $uniqueChance - $heroicChance - $legendaryChance;
+        if($commonChance < 0) $commonChance = 0;
+
 
         $chances[ItemRarity::Legendary->value] = $legendaryChance;
         $chances[ItemRarity::Heroic->value] = $heroicChance;

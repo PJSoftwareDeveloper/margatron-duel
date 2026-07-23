@@ -257,7 +257,7 @@ final readonly class BattleService
     {
         $profile->forceFill([
             'gold' => $profile->gold + $enemy['gold'],
-            'hp' => $result['playerHp'],
+            'hp' => $profile->hp_max,
             'monsters_killed' => $profile->monsters_killed + 1,
         ])->save();
 

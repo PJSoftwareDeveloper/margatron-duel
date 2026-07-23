@@ -382,9 +382,9 @@
   color: gold;
   font-size: 11px;
   width: 100%;
-  min-height: 40px;
-  padding: 5px;
+  padding: 3px;
   justify-content: center;
+  border-radius: 4px;
   
 }
 
@@ -875,6 +875,15 @@
 }
 
 /* ================= BATTLE SELECTION ================= */
+.battle-info{
+  position: absolute;
+  color: red;
+  font-size: 24px;
+  background-color: black;
+  width: 100%;
+  text-align: center;
+}
+
 .battle-selection-content {
   flex: 1;
   display: flex;

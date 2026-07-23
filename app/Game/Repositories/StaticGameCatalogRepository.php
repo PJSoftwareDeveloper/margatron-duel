@@ -204,7 +204,7 @@ final readonly class StaticGameCatalogRepository
                 'id' => 'blacksmith_1',
                 'name' => 'Sklep',
                 'items' => [
-                    $this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
+                    //$this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
 
                     $this->shopItem(201, 'Miecz żelazny', 'items/sword.gif', ItemType::Weapon, ItemRarity::Common, 1, ['dmgMin' => 3, 'dmgMax' => 7], 150),
                     $this->shopItem(202, 'Topór wojenny', 'items/axe.gif', ItemType::Weapon, ItemRarity::Common, 3, ['dmgMin' => 5, 'dmgMax' => 10], 300),
@@ -216,32 +216,22 @@ final readonly class StaticGameCatalogRepository
                     $this->shopItem(222, 'Mistyczny Amulet', 'items/amulet.gif', ItemType::Talisman, ItemRarity::Unique, 6, ['critChance' => 2, 'hp' => 15], 500),
                 ],
             ],
-            'alchemist_1' => [
-                'id' => 'alchemist_1',
-                'name' => 'Sklep',
-                'items' => [
-                    $this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
-
-                    $this->shopItem(301, 'Mała mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'heal', 'value' => 20]),
-                    $this->shopItem(302, 'Średnia mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 3, [], 80, ['type' => 'heal', 'value' => 50]),
-                    $this->shopItem(303, 'Duża mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 5, [], 150, ['type' => 'heal', 'value' => 100]),
-                    $this->shopItem(311, 'Mała butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'pa', 'value' => 5]),
-                    $this->shopItem(312, 'Średnia butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 5, [], 180, ['type' => 'pa', 'value' => 10]),
-                    $this->shopItem(321, 'Eliksir Siły', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 4, ['strength' => 3], 200, ['type' => 'buff_strength', 'value' => 3]),
-                ],
-            ],
+            // 'alchemist_1' => [
+            //     'id' => 'alchemist_1',
+            //     'name' => 'Sklep',
+            //     'items' => [
+            //         $this->shopItem(301, 'Mała mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'heal', 'value' => 20]),
+            //         $this->shopItem(302, 'Średnia mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 3, [], 80, ['type' => 'heal', 'value' => 50]),
+            //         $this->shopItem(303, 'Duża mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 5, [], 150, ['type' => 'heal', 'value' => 100]),
+            //         $this->shopItem(311, 'Mała butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'pa', 'value' => 5]),
+            //         $this->shopItem(312, 'Średnia butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 5, [], 180, ['type' => 'pa', 'value' => 10]),
+            //         $this->shopItem(321, 'Eliksir Siły', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 4, ['strength' => 3], 200, ['type' => 'buff_strength', 'value' => 3]),
+            //     ],
+            // ],
             'blacksmith_2' => [
                 'id' => 'blacksmith_2',
                 'name' => 'Sklep',
                 'items' => [
-                    $this->shopItem(501, 'Wielka mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 10, [], 0, ['type' => 'heal', 'value' => 150]),
-                    $this->shopItem(502, 'Epicka mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Heroic, 10, [], 400, ['type' => 'heal', 'value' => 300]),
-                    $this->shopItem(511, 'Duża butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 10, [], 250, ['type' => 'pa', 'value' => 15]),
-                    $this->shopItem(521, 'Potężny Eliksir Siły', 'items/strength.gif', ItemType::Potion, ItemRarity::Heroic, 12, ['strength' => 8], 400, ['type' => 'buff_strength', 'value' => 8]),
-                    $this->shopItem(522, 'Eliksir Krytyka', 'items/crit.gif', ItemType::Potion, ItemRarity::Unique, 10, ['critChance' => 15], 300, ['type' => 'buff_crit', 'value' => 15]),
-                    $this->shopItem(523, 'Legendarny Eliksir Mocy', 'items/crit.gif', ItemType::Potion, ItemRarity::Legendary, 15, [], 1000, ['type' => 'buff_all', 'value' => 10]),
-                    $this->shopItem(531, 'Mikstura Ochrony', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 10, ['armor' => 15], 250, ['type' => 'buff_armor', 'value' => 15]),
-
                     $this->shopItem(401, 'Mroczny Miecz', 'items/sword.gif', ItemType::Weapon, ItemRarity::Common, 10, ['dmgMin' => 12, 'dmgMax' => 20], 800),
                     $this->shopItem(402, 'Topór Cienia', 'items/axe.gif', ItemType::Weapon, ItemRarity::Common, 12, ['dmgMin' => 15, 'dmgMax' => 25], 1200),
                     $this->shopItem(403, 'Bohaterski Młot', 'items/hammer.gif', ItemType::Weapon, ItemRarity::Heroic, 15, ['dmgMin' => 18, 'dmgMax' => 30, 'critChance' => 5, 'critPower' => 15], 2500),
@@ -253,37 +243,13 @@ final readonly class StaticGameCatalogRepository
                     $this->shopItem(422, 'Mityczny Amulet Mocy', 'items/amulet.gif', ItemType::Talisman, ItemRarity::Legendary, 18, ['hp' => 40, 'critChance' => 6, 'stun' => 3], 5000),
                 ],
             ],
-            'alchemist_2' => [
-                'id' => 'alchemist_2',
-                'name' => 'Rzemieślnik',
-                'items' => [
-                    $this->shopItem(501, 'Wielka mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 10, [], 0, ['type' => 'heal', 'value' => 150]),
-                    $this->shopItem(502, 'Epicka mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Heroic, 10, [], 400, ['type' => 'heal', 'value' => 300]),
-                    $this->shopItem(511, 'Duża butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 10, [], 250, ['type' => 'pa', 'value' => 15]),
-                    $this->shopItem(521, 'Potężny Eliksir Siły', 'items/strength.gif', ItemType::Potion, ItemRarity::Heroic, 12, ['strength' => 8], 400, ['type' => 'buff_strength', 'value' => 8]),
-                    $this->shopItem(522, 'Eliksir Krytyka', 'items/crit.gif', ItemType::Potion, ItemRarity::Unique, 10, ['critChance' => 15], 300, ['type' => 'buff_crit', 'value' => 15]),
-                    $this->shopItem(523, 'Legendarny Eliksir Mocy', 'items/crit.gif', ItemType::Potion, ItemRarity::Legendary, 15, [], 1000, ['type' => 'buff_all', 'value' => 10]),
-                    $this->shopItem(531, 'Mikstura Ochrony', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 10, ['armor' => 15], 250, ['type' => 'buff_armor', 'value' => 15]),
-                ],
-            ],
             'blacksmith_3' => [
                 'id' => 'blacksmith_3',
                 'name' => 'Sklep',
                 'items' => [
-                    $this->shopItem(701, 'Smoczy Eliksir Życia', 'items/health.gif', ItemType::Potion, ItemRarity::Legendary, 25, [], 800, ['type' => 'heal', 'value' => 500]),
-                    $this->shopItem(702, 'Krew Smoka', 'items/strength.gif', ItemType::Potion, ItemRarity::Legendary, 30, [], 2000, ['type' => 'buff_all', 'value' => 20]),
-
                     $this->shopItem(601, 'Smocza Kosa', 'items/spear.gif', ItemType::Weapon, ItemRarity::Heroic, 20, ['dmgMin' => 30, 'dmgMax' => 50, 'critChance' => 7, 'critPower' => 20], 5000),
                     $this->shopItem(602, 'Boski Miecz Zagłady', 'items/sword.gif', ItemType::Weapon, ItemRarity::Legendary, 25, ['dmgMin' => 45, 'dmgMax' => 70, 'critChance' => 12, 'critPower' => 35, 'doubleDamage' => 8], 15000),
                     $this->shopItem(611, 'Smocza Łuska', 'items/plate.gif', ItemType::Armor, ItemRarity::Legendary, 22, ['armor' => 70, 'hp' => 80, 'dodge' => 7, 'doubleArmor' => 8], 18000),
-                ],
-            ],
-            'alchemist_3' => [
-                'id' => 'alchemist_3',
-                'name' => 'Rzemieślnik',
-                'items' => [
-                    $this->shopItem(701, 'Smoczy Eliksir Życia', 'items/health.gif', ItemType::Potion, ItemRarity::Legendary, 25, [], 800, ['type' => 'heal', 'value' => 500]),
-                    $this->shopItem(702, 'Krew Smoka', 'items/strength.gif', ItemType::Potion, ItemRarity::Legendary, 30, [], 2000, ['type' => 'buff_all', 'value' => 20]),
                 ],
             ],
         ];
@@ -317,10 +283,7 @@ final readonly class StaticGameCatalogRepository
                 ['name' => 'Runa', 'image' => 'items/rune.gif'],
             ],
             ItemType::Potion->value => [
-                ['name' => 'Mikstura życia', 'image' => 'items/health.gif', 'effect' => ['type' => 'heal', 'value' => 25]],
                 ['name' => 'Butelka PA', 'image' => 'items/pa.gif', 'effect' => ['type' => 'pa', 'value' => 5]],
-                ['name' => 'Eliksir siły', 'image' => 'items/strength.gif', 'effect' => ['type' => 'buff_strength', 'value' => 2]],
-                ['name' => 'Eliksir krytyka', 'image' => 'items/crit.gif', 'effect' => ['type' => 'buff_crit', 'value' => 5]],
             ],
         ];
     }
