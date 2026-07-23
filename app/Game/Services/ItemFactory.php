@@ -64,12 +64,21 @@ final readonly class ItemFactory
         } elseif ($type === ItemType::Talisman) {
             $bonusStats = $this->generateBonusStats($type, max(1, $meta->bonusStats), $level, $meta->statMultiplier);
             $stats = $this->flattenBonusStats($bonusStats);
-        } else {
-            $scale = 1 + ($level * 0.1);
+        } 
+        else { 
             $effect = $base['effect'];
-            $effect['value'] = max(1, (int) floor($effect['value'] * $scale * $meta->statMultiplier));
+
+            $effect['value'] = $this->rollPotionEffect($effect['type'], $rarity);
+
             $bonusStats = [];
         }
+        // else {
+        //     $scale = 1 + ($level * 0.1);
+        //     $effect = $base['effect'];
+        //     $effect['value'] = max(1, (int) floor($effect['value'] * $scale * $meta->statMultiplier));
+        //     $bonusStats = [];
+        // }
+
 
         $power = $this->power($type, $stats, $effect, $meta->statMultiplier);
         $price = (int) floor($power * $meta->priceMultiplier);
@@ -99,6 +108,17 @@ final readonly class ItemFactory
             ...$stats,
         ];
     }
+
+    private function rollPotionEffect(string $effectType, ItemRarity $rarity): int
+    {
+        $ranges = $this->catalog->potionEffectRanges();
+        if (!isset($ranges[$effectType])) {
+            return 1;
+        }
+        [$min, $max] = $ranges[$effectType][$rarity->value];
+        return random_int($min, $max);
+    }
+
 
     private function rollRarity(int $luckBonus, ?ArenaDifficulty $arenaDifficulty): ItemRarity
     {

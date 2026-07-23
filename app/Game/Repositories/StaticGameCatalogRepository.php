@@ -194,6 +194,18 @@ final readonly class StaticGameCatalogRepository
         ];
     }
 
+    
+    public function potionEffectRanges(): array
+    {
+        return [
+            'pa' => [
+                ItemRarity::Common->value => [5, 5],
+                ItemRarity::Unique->value => [5, 10],
+                ItemRarity::Heroic->value => [10, 20],
+                ItemRarity::Legendary->value => [25, 25],
+        ]];
+    }
+
     /**
      * @return array<string, array<string, mixed>>
      */

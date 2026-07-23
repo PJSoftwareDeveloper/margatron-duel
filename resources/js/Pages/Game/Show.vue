@@ -2,12 +2,12 @@
 import BattleLogEntry from '@/Components/Game/BattleLogEntry.vue';
 import GameTopBar from '@/Components/Game/GameTopBar.vue';
 import PlayerSidebar from '@/Components/Game/PlayerSidebar.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { echo } from '@/echo';
 import type { AxiosError } from 'axios';
-import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Npc, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
+import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, Player, GameSnapshot, Item, Npc, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
 
 
 type Resource<T> = T | { data: T };
@@ -15,7 +15,6 @@ type GameView = 'map' | 'battleSelection' | 'arena' | 'toughenemy' | 'battle' | 
 
 const props = defineProps<{
     game: Resource<GameSnapshot>;
-   
 }>();
 
 const game = ref(unwrap(props.game));
@@ -257,24 +256,38 @@ function formatCountdown(seconds: number): string {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function showTooltip(item: Item | null | undefined, event: MouseEvent): void {
-    if (!item) {
-        return;
-    }
+async function showTooltip(item: Item | null | undefined, event: MouseEvent): Promise<void> {
+    if (!item) return;
 
     tooltipItem.value = item;
-    const offset = 15;
-    tooltipX.value = event.clientX + offset;
-    tooltipY.value = event.clientY + offset;
 
-    if (tooltipX.value + 280 > window.innerWidth) {
-        tooltipX.value = event.clientX - 295;
+    const el = event.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+
+    await nextTick(); 
+
+    const tooltipEl = document.getElementById('tip');
+    if (!tooltipEl) return;
+
+    const tooltipWidth = tooltipEl.offsetWidth;
+    const tooltipHeight = tooltipEl.offsetHeight;
+    const offset = 10;
+
+    let x = rect.left - (tooltipWidth - 32)/2;
+    let y = rect.top - tooltipHeight - offset;
+
+    if (y < 0) {
+        y = rect.bottom + offset;
     }
 
-    if (tooltipY.value + 250 > window.innerHeight) {
-        tooltipY.value = event.clientY - 265;
+    if (x + tooltipWidth > window.innerWidth) {
+        x = window.innerWidth - tooltipWidth - offset;
     }
+
+    tooltipX.value = x;
+    tooltipY.value = y;
 }
+
 
 function hideTooltip(): void {
     tooltipItem.value = null;
@@ -394,15 +407,23 @@ async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean 
     }
     if (stageCount == null) stageCount = 10;
     lastBattleStage.value = stage.stage;
-    const response = await axios.post('/game/actions/battle/stage', {
-        locationId: selectedBattleLocation.value.id,
-        stage: stage.stage,
-    });
-    stageCount -= 1;
-    battleResult.value = response.data.battle;
-    syncGame(response.data.game);
-    currentView.value = 'battle';
-    await scrollLog();
+
+    
+
+    try{
+        const response = await axios.post('/game/actions/battle/stage', {
+            locationId: selectedBattleLocation.value.id,
+            stage: stage.stage,
+        });
+        stageCount -= 1;
+        battleResult.value = response.data.battle;
+        syncGame(response.data.game);
+        currentView.value = 'battle';
+        await scrollLog();
+    }
+    catch (error) {
+        showActionError(error);
+    }
 }
 
 
@@ -533,7 +554,7 @@ async function addAttribute(attribute: PlayerAttributeKey): Promise<void> {
     await action('/game/actions/attribute', { attribute });
 }
 
-async function buyPA(amount: 5 | 10 | 15, price: 100 | 180 | 250): Promise<void> {
+async function buyPA(amount: number, price: number): Promise<void> {
     await action('/game/actions/pa', { amount, price });
     showPAShop.value = false;
 }
@@ -916,20 +937,20 @@ async function scrollLog(): Promise<void> {
             <div class="modal-content pa-shop">
                 <h2>Sklep z PA</h2>
                 <div class="shop-items">
-                    <div class="shop-item" @click="buyPA(5, 100)">
+                    <div class="shop-item" @click="buyPA(5, Math.round(100 * user.level *0.1111))">
                         <span class="item-name">Mała butelka PA</span>
                         <span class="item-bonus">+5 PA</span>
-                        <span class="item-price">💰 100</span>
+                        <span class="item-price">💰 {{Math.round(100 * user.level *0.1111)}}</span>
                     </div>
-                    <div class="shop-item" @click="buyPA(10, 180)">
+                    <div class="shop-item" @click="buyPA(10, Math.round(180 * user.level * 0.1111))">
                         <span class="item-name">Średnia butelka PA</span>
                         <span class="item-bonus">+10 PA</span>
-                        <span class="item-price">💰 180</span>
+                        <span class="item-price">💰 {{ Math.round(180 * user.level * 0.1111)}}</span>
                     </div>
-                    <div class="shop-item" @click="buyPA(15, 250)">
+                    <div class="shop-item" @click="buyPA(15, Math.round(250 * user.level * 0.1111))">
                         <span class="item-name">Duża butelka PA</span>
                         <span class="item-bonus">+15 PA</span>
-                        <span class="item-price">💰 250</span>
+                        <span class="item-price">💰 {{ Math.round(250 * user.level * 0.1111) }}</span>
                     </div>
                 </div>
                 <button class="btn-close" @click="showPAShop = false">Zamknij</button>
