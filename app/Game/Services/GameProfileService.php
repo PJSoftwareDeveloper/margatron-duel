@@ -193,16 +193,19 @@ final readonly class GameProfileService
         $stunBonus = $this->stat($weapon, 'stun') + $this->stat($accessory, 'stun');
         $newHpMax = 50 + (($profile->vitality - 5) * 10) + (($profile->level - 1) * 5) + $hpBonus;
 
+        $critChance = 5 + $critChanceBonus + (int) floor($profile->luck / 3);
+        $dodgeChance = 2 + $dodgeBonus + (int) floor($profile->luck / 5);
+
         $profile->forceFill([
             'hp_max' => max(1, $newHpMax),
             'hp' => min($profile->hp, max(1, $newHpMax)),
             'dmg_min' => $baseDmgMin + (int) floor($profile->strength / 2),
             'dmg_max' => $baseDmgMax + $profile->strength,
             'armor' => $baseArmor,
-            'crit_chance' => 5 + $critChanceBonus + (int) floor($profile->luck / 3),
+            'crit_chance' => $critChance <= 50 ? $critChance : 50,
             'crit_power' => 150 + $critPowerBonus,
-            'dodge' => 2 + $dodgeBonus + (int) floor($profile->luck / 5),
-            'stun' => $stunBonus,
+            'dodge' => $dodgeChance <= 40 ? $dodgeChance : 40,
+            'stun' => $stunBonus <= 40 ? $stunBonus : 50,
         ])->save();
 
         return $profile->refresh();
