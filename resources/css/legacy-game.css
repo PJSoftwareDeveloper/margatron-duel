@@ -2,7 +2,7 @@
 
 #game-container {
   width: 980px;
-  height: 596px;
+  height: 576px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -393,7 +393,7 @@
   margin-top: 0;
 }
 
-.location-level {
+.location-text {
   font-size: 10px;
 }
 
@@ -431,11 +431,11 @@
   cursor: not-allowed;
 }
 
-.location-icon,
+/* .location-icon,
 .location-name,
 .location-cost {
   display: none;
-}
+} */
 
 .location-info {
   position: absolute;

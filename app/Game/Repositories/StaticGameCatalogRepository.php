@@ -18,15 +18,21 @@ final readonly class StaticGameCatalogRepository
     {
         return [
             GameMap::Ithan->value => $this->buildMap(GameMap::Ithan, [
+                'npcs' => [
+                    $this->setNpc('ithan-npc-1', 'Makatara', 'npc233.gif', 2, 11.5, 32, 48),
+                    $this->setNpc('ithan-npc-2', 'Roan', 'roan.gif', 21, 10.5, 32, 48),
+                    $this->setNpc('ithan-npc-3', 'Bard Grant', 'npc232.gif', 3, 4.5, 32, 48),
+                    $this->setNpc('ithan-npc-4', 'Sir Gallen', 'npc57.gif', 13, 4.5, 32, 48),
+                    $this->setNpc('ithan-npc-5', 'Ognisko', 'ogn_barb02.gif', 19, 7, 32, 32),
+                ],
                 'locations' => [
-                    $this->battle('ithan-yss', 'Dolina Yss', 90, 10, 3, 6, 10, ['wolf', 'spider']),
-                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', 46, 13, 1, 1, 5, ['goblin', 'rat']),
-                    // $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, 23.3, 27, 2),
-                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 23.3, 22, 2),
-                    $this->shop('ithan-roan', 'Sklep Roana', 87.5, 70, 'blacksmith_1'),
-                    $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, 33.5, 70),
-                    $this->shop('ithan-makatara', 'Sklep Makatary', 8.6, 76, 'alchemist_1'),
-                    $this->buildLocation('ithan-world', 'Mapa Świata', LocationType::WorldMap, 46, 90),
+                    $this->battle('ithan-yss', 'Dolina Yss', '009.jpg', 21.5, 2, 5, 4, 3, 6, 10, ['wolf', 'spider']),
+                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', '004.jpg', 11.5, 2.5, 3, 3, 1, 1, 5, ['goblin', 'rat']),
+                    $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, '001.jpg', 22, 11, 4, 4),
+                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '025.jpg', 6, 4.5, 4, 3, 2),
+                    $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, '025.jpg', 11, 9.5, 3, 3),
+                    $this->shop('ithan-shop', 'Sklep', '001.jpg', 2.5, 12.5, 3, 3, 'blacksmith_1'),
+                    $this->buildLocation('ithan-world', 'Mapa Świata', LocationType::WorldMap, '', 11.5, 14.5, 3, 3),
                 ],
                 'enemies' => [
                     'goblin' => $this->enemy('Gaunt', 'gaunt.gif', 15, 1, 3, 6, 0),
@@ -52,15 +58,22 @@ final readonly class StaticGameCatalogRepository
                 ],
             ]),
             GameMap::Torneg->value => $this->buildMap(GameMap::Torneg, [
+                'npcs' => [
+                    $this->setNpc('torneg-npc-1', 'Syntia', 'npc196.gif', 18, 5.5, 32, 48),
+                    $this->setNpc('torneg-npc-2', 'Alan', 'npc240.gif', 12, 8.5, 32, 48),
+                    $this->setNpc('torneg-npc-3', 'Milena', 'npc239.gif', 10, 9.5, 32, 48),
+                    $this->setNpc('torneg-npc-4', 'Strażnik', 'npc256.gif', 13, 2.5, 32, 48),
+                    $this->setNpc('torneg-npc-5', 'Salome', 'npc108.gif', 1, 5.5, 32, 48),
+                ],
                 'locations' => [
-                    $this->battle('torneg-mountain-cave', 'Górska Grota', 30.7, 10, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
-                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków', 92, 70, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
-                    $this->buildLocation('torneg-arena', 'Arena', LocationType::Arena, 60.5, 10, 3, ['levelReq' => 9]),
-                    $this->shop('torneg-syntia', 'Sklep', 75, 39, 'blacksmith_2'),
-                    $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, 82, 90),
-                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 8, 45, 2),
+                    $this->battle('torneg-mountain-cave', 'Górska Grota', '005.jpg', 8, 1, 4, 2, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
+                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków', '005.jpg', 23.5, 11.5, 3, 3, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
+                    $this->buildLocation('torneg-arena', 'Arena', LocationType::Arena, '030.jpg', 15, 1.5, 4, 3, 3, ['levelReq' => 9]),
+                    $this->shop('torneg-syntia', 'Sklep', '001.jpg', 19, 7, 4, 4, 'blacksmith_2'),
+                    $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, '025.jpg', 20.5, 14.5, 3, 3),
+                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '009.jpg', 1, 9, 2, 2, 2),
                     // $this->shop('torneg-salome', 'Salome', 8, 45, 'alchemist_2'),
-                    $this->buildLocation('torneg-world', 'Mapa Świata', LocationType::WorldMap, 53, 90),
+                    $this->buildLocation('torneg-world', 'Mapa Świata', LocationType::WorldMap, '', 14.5, 15, 5, 2),
                 ],
                 'enemies' => [
                     'dark_wolf' => $this->enemy('Mroczny Wilk', 'dark_wolf.gif', 55, 8, 14, 28, 4),
@@ -87,16 +100,21 @@ final readonly class StaticGameCatalogRepository
                 ],
             ]),
             GameMap::KarkaHan->value => $this->buildMap(GameMap::KarkaHan, [
+                'npcs' => [
+                    $this->setNpc('karka-han-npc-1', 'Anzelm', 'npc266.gif', 3, 4.5, 32, 48),
+                    $this->setNpc('karka-han-npc-2', 'Lady Gipsyanne', 'aryst01.gif', 13, 8.5, 32, 48),
+                    $this->setNpc('karka-han-npc-3', 'Lady Clarissa', 'aryst02.gif', 14, 8.5, 32, 48),
+                    ],
                 'locations' => [
-                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja', 31, 23, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('karka-zulu-settlement', 'Osada Zulusów', 8, 54, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
-                    $this->buildLocation('karka-arena', 'Arena', LocationType::Arena, 73.2, 20, 3, ['levelReq' => 20]),
-                    $this->shop('karka-armorer', 'Sklep', 75, 65, 'blacksmith_2'),
-                    $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, 95, 7),
-                    $this->buildLocation('karka-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 14, 30, 2),
+                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja', '009.jpg', 8, 3.5, 4, 3, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
+                    $this->battle('karka-zulu-settlement', 'Osada Zulusów', '007.jpg', 1.5, 9.5, 3, 3, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
+                    $this->buildLocation('karka-arena', 'Arena', LocationType::Arena, '001.jpg', 16.5, 2.5, 5, 3, 3, ['levelReq' => 20]),
+                    $this->shop('karka-armorer', 'Sklep', '001.jpg', 21, 10, 4, 4, 'blacksmith_2'),
+                    $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, '025.jpg', 11, 9.5, 4, 3),
+                    $this->buildLocation('karka-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '035.jpg', 4, 5, 2, 2, 2),
 
                     // $this->shop('karka-craftsman', 'Rzemieślnik', 14, 30, 'alchemist_2'),
-                    $this->buildLocation('karka-world', 'Mapa Świata', LocationType::WorldMap, 44, 90),
+                    $this->buildLocation('karka-world', 'Mapa Świata', LocationType::WorldMap, '', 11, 15, 4, 2),
                 ],
                 'enemies' => [
                     'zubr' => $this->enemy('Żubr', 'zubr.gif', 135, 21, 34, 92, 18),
@@ -115,15 +133,25 @@ final readonly class StaticGameCatalogRepository
                 ],
             ]),
             GameMap::Werbin->value => $this->buildMap(GameMap::Werbin, [
+                'npcs' => [
+                    $this->setNpc('werbin-npc-1', 'Wiedźma Amra', 'npc85.gif', 1, 0.5, 32, 48),
+                    $this->setNpc('werbin-npc-2', 'Irminka', 'dk-irmina.gif', 9, 8.5, 32, 48),
+                    $this->setNpc('werbin-npc-3', 'Kotek', 'npc251.gif', 9, 5 - (1/16), 16, 38),
+                    $this->setNpc('werbin-npc-4', 'Piesek', 'pies01d.gif', 13 , 12 + (10/32), 26, 22),
+                    $this->setNpc('werbin-npc-5', 'Ognisko', 'ogn_barb02.gif', 22, 6, 32, 32),
+                    
+                ],
                 'locations' => [
-                    $this->battle('werbin-heaths', 'Wrzosowiska', 84, 10, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('werbin-goblin-forest', 'Las Goblinów', 92, 63, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
-                    $this->buildLocation('werbin-arena', 'Arena', LocationType::Arena, 29.2, 20, 3, ['levelReq' => 35]),
-                    $this->shop('werbin-armorer', 'Sklep', 39, 58, 'blacksmith_3'),
-                    $this->buildLocation('werbin-inn', 'Karczma', LocationType::Rest, 70, 58),
-                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, 8.4, 10, 2),
+                    $this->battle('werbin-heaths', 'Wrzosowiska', '010.jpg', 18.5, 1, 5, 2, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
+                    $this->battle('werbin-goblin-forest', 'Las Goblinów', '009.jpg', 23.5, 10.5, 3, 3, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('werbin-tristam', 'Tristam', '008.jpg', 1.5, 1.5, 3, 3, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
+                    
+                    $this->buildLocation('werbin-arena', 'Arena', LocationType::Arena, '001.jpg', 7.5, 2.5, 3, 3, 3, ['levelReq' => 35]),
+                    $this->shop('werbin-armorer', 'Sklep', '001.jpg', 10.5, 9.5, 3, 3, 'blacksmith_3'),
+                    $this->buildLocation('werbin-inn', 'Karczma', LocationType::Rest, '025.jpg', 17.5, 8.5, 3, 3),
+                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '011.jpg', 24, 5, 2, 2, 2),
                     // $this->shop('werbin-craftsman', 'Rzemieślnik', 8.4, 10, 'alchemist_3'),
-                    $this->buildLocation('werbin-world', 'Mapa Świata', LocationType::WorldMap, 44, 90),
+                    $this->buildLocation('werbin-world', 'Mapa Świata', LocationType::WorldMap, '', 9.5, 15, 5, 2),
                 ],
                 'enemies' => [
                     'zubr' => $this->enemy('Żubr', 'zubr.gif', 220, 42, 66, 210, 48),
@@ -174,7 +202,7 @@ final readonly class StaticGameCatalogRepository
         return [
             'blacksmith_1' => [
                 'id' => 'blacksmith_1',
-                'name' => 'Sklep Roana',
+                'name' => 'Sklep',
                 'items' => [
                     $this->shopItem(201, 'Miecz żelazny', 'items/sword.gif', ItemType::Weapon, ItemRarity::Common, 1, ['dmgMin' => 3, 'dmgMax' => 7], 150),
                     $this->shopItem(202, 'Topór wojenny', 'items/axe.gif', ItemType::Weapon, ItemRarity::Common, 3, ['dmgMin' => 5, 'dmgMax' => 10], 300),
@@ -188,7 +216,7 @@ final readonly class StaticGameCatalogRepository
             ],
             'alchemist_1' => [
                 'id' => 'alchemist_1',
-                'name' => 'Sklep Makatary',
+                'name' => 'Sklep',
                 'items' => [
                     $this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
 
@@ -421,14 +449,35 @@ final readonly class StaticGameCatalogRepository
      * @param  array<string, mixed>  $extra
      * @return array<string, mixed>
      */
-    private function buildLocation(string $id, string $name, LocationType $type, float $x, float $y, int $pa = 1, array $extra = []): array
+
+
+    private function setNpc(string $id, string $name, string $image, float $x, float $y, float $width, float $height): array
+    {
+        return [
+            'id' => $id,
+            'name' => $name,
+            'image' => $image,
+            'imageUrl' => $this->assetUrl("npcs/{$image}"),
+            'x' => $x,
+            'y' => $y,
+            'width' => $width,
+            'height' => $height,
+        ];
+    }
+    
+
+    private function buildLocation(string $id, string $name, LocationType $type, string $image, float $x, float $y, float $width, float $height, int $pa = 1, array $extra = []): array
     {
         return [
             'id' => $id,
             'name' => $name,
             'type' => $type->value,
+            'image' => $image,
+            'imageUrl' => $this->assetUrl("bg/{$image}"),
             'x' => $x,
             'y' => $y,
+            'width' => $width,
+            'height' => $height,
             'pa' => $pa,
             ...$extra,
         ];
@@ -438,9 +487,9 @@ final readonly class StaticGameCatalogRepository
      * @param  array<int, string>  $enemies
      * @return array<string, mixed>
      */
-    private function battle(string $id, string $name, float $x, float $y, int $levelReq, int $levelMin, int $levelMax, array $enemies, int $pa = 1): array
+    private function battle(string $id, string $name, string $image, float $x, float $y, float $width, float $height, int $levelReq, int $levelMin, int $levelMax, array $enemies, int $pa = 1): array
     {
-        return $this->buildLocation($id, $name, LocationType::Battle, $x, $y, $pa, [
+        return $this->buildLocation($id, $name, LocationType::Battle, $image, $x, $y, $width, $height, $pa, [
             'levelReq' => $levelReq,
             'levelMin' => $levelMin,
             'levelMax' => $levelMax,
@@ -451,9 +500,9 @@ final readonly class StaticGameCatalogRepository
     /**
      * @return array<string, mixed>
      */
-    private function shop(string $id, string $name, float $x, float $y, string $shopId): array
+    private function shop(string $id, string $name, string $image, float $x, float $y, float $width, float $height, string $shopId): array
     {
-        return $this->buildLocation($id, $name, LocationType::Shop, $x, $y, 1, [
+        return $this->buildLocation($id, $name, LocationType::Shop, $image, $x, $y, $width, $height, 1, [
             'shopId' => $shopId,
         ]);
     }

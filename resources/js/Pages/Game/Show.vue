@@ -7,7 +7,7 @@ import axios from 'axios';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { echo } from '@/echo';
 import type { AxiosError } from 'axios';
-import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
+import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Npc, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
 
 
 type Resource<T> = T | { data: T };
@@ -61,6 +61,7 @@ const battleStages = computed(() => selectedBattleLocation.value?.stages?.map((s
 })) ?? []);
 
 const mapLocations = computed(() => currentMap.value.locations.map((location) => decorateLocation(location)));
+const mapNpcs = computed(() => currentMap.value.npcs.map((npc) => npc));
 
 function unwrap<T extends object>(resource: Resource<T>): T {
     return 'data' in resource ? resource.data : resource;
@@ -363,11 +364,9 @@ function confirmEnterLocation(): void {
     } else if (location.type === 'arena') {
         currentView.value = 'arena';
     }else if (location.type === 'toughenemy') {
-        selectedBattleLocation.value = location;
         currentView.value = 'toughenemy';
     }
 
-    selectedLocation.value = null;
 }
 
 function goBackToMap(): void {
@@ -382,6 +381,7 @@ async function selectWorldMap(worldMap: { id: number; locked: boolean }): Promis
 
     await action('/game/actions/map', { mapId: worldMap.id });
     currentView.value = 'map';
+    selectedLocation.value = null;
 }
 
 async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean }): Promise<void> {
@@ -402,7 +402,7 @@ async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean 
 
 
 async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<void> {
-    if (!selectedBattleLocation.value) {
+    if (!selectedLocation.value) {
         return;
     }
 
@@ -410,7 +410,7 @@ async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<
 
     try{
         const response = await axios.post('/game/actions/battle/tough', {
-            locationId: selectedBattleLocation.value.id,
+            locationId: selectedLocation.value.id,
             enemyType: enemyType,
         });
 
@@ -445,7 +445,6 @@ async function startNextBattle(): Promise<void> {
         closeBattle();
         return;
     }
-
     await selectBattleStage(target);
 }
 
@@ -453,6 +452,7 @@ function closeBattle(): void {
     battleResult.value = null;
     lastBattleStage.value = null;
     currentView.value = 'map';
+    selectedLocation.value = null;
 }
 
 async function action(url: string, data: Record<string, unknown> = {}): Promise<void> {
@@ -609,11 +609,20 @@ async function scrollLog(): Promise<void> {
                             <div class="map-name-label">{{ currentMap.name }}</div>
 
                             <div
+                                v-for="npc in mapNpcs"
+                                :key="npc.id"
+                                class="map-npc"
+                                :style="{ position: 'absolute', left: npc.x * 32 + 'px', top: npc.y * 32 + 'px', backgroundImage: `url(${npc.imageUrl})`, width: npc.width + 'px', height: npc.height + 'px' }"
+                                :alt-text="npc.name"
+                                >
+
+                            </div>
+                            <div
                                 v-for="location in mapLocations"
                                 :key="location.id"
                                 class="map-location"
                                 :class="[location.type, { locked: location.locked }]"
-                                :style="{ left: location.x + '%', top: location.y + '%' }"
+                                :style="{ left: location.x * 32 + 'px', top: location.y * 32 + 'px', width: location.width * 32 + 'px', height: location.height * 32 + 'px', }"
                                 
                                 @click="enterLocation(location)"
                             >
@@ -653,7 +662,7 @@ async function scrollLog(): Promise<void> {
                             :class="{ locked: stage.locked }"
                             @click="selectBattleStage(stage)"
                         >
-                            <div class="stage-background" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }"></div>
+                            <div class="stage-background" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})`, backgroundPositionX: -(87 * (stage.stage-1)) + `px` }"></div>
                             <div class="stage-content">
                                 <span class="stage-number">{{ stage.stage }}</span>
                                 <span class="stage-label">Etap {{ stage.stage }}</span>
@@ -675,7 +684,7 @@ async function scrollLog(): Promise<void> {
                                 <p>Tutaj możesz zmierzyć się z silnym przeciwnikiem.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})` }">
                             <div class="arena-buttons-container">
                                 <button class="arena-difficulty-btn easy" @click="startToughFight('elite')">
                                     <span class="difficulty-name">Walka z elitą</span>
@@ -706,7 +715,7 @@ async function scrollLog(): Promise<void> {
                                 <p class="arena-tip">Im trudniejsza walka, tym większa szansa na lepszą nagrodę.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})` }">
                             <div class="arena-buttons-container">
                                 <button class="arena-difficulty-btn easy" @click="startArenaFight('easy')">
                                     <span class="difficulty-name">Łatwa walka</span>
@@ -741,7 +750,7 @@ async function scrollLog(): Promise<void> {
                             </div>
                         </div>
 
-                        <div class="battle-visuals" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
+                        <div class="battle-visuals" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})` }">
                             <div class="enemy-container">
                                 <img v-if="battleResult?.enemy.imageUrl" :src="battleResult.enemy.imageUrl" :alt="battleResult.enemy.name" class="enemy-image-pixel">
                             </div>
@@ -770,7 +779,7 @@ async function scrollLog(): Promise<void> {
 
                 <div v-else-if="currentView === 'shop'" class="inline-view shop-inline">
                     <div class="inline-header">{{ shopName }}</div>
-                    <div class="shop-main-content">
+                    <div class="shop-main-content" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionY: (60)+`%`, backgroundSize: `100%` }">
                         <div class="shop-tabs">
                             <button :class="{ active: shopTab === 'buy' }" @click="shopTab = 'buy'">Kup</button>
                             <button :class="{ active: shopTab === 'sell' }" @click="shopTab = 'sell'">Sprzedaj</button>
@@ -821,7 +830,12 @@ async function scrollLog(): Promise<void> {
 
                 <div v-else-if="currentView === 'rest'" class="inline-view rest-inline">
                     <div class="inline-header">Odpoczynek</div>
-                    <div class="rest-content">
+                    <div class="rest-content" :style="{ 
+                        backgroundImage: `url(${selectedLocation?.imageUrl})`, 
+                        backgroundPositionY: (60)+`%`, 
+                        backgroundSize: `100%` 
+                        }">
+                    
                         <p class="rest-description">Odpocznij, aby zregenerować PA szybciej.</p>
                         <div class="rest-options">
                             <button

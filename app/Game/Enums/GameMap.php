@@ -7,16 +7,16 @@ use ReflectionEnumUnitCase;
 
 enum GameMap: int
 {
-    #[MapMeta('Ithan', 'map1.png', 1, 10)]
+    #[MapMeta('Ithan', 'maps/ithan.png', 1, 10)]
     case Ithan = 1;
 
-    #[MapMeta('Torneg', 'map2.png', 11, 20, 9)]
+    #[MapMeta('Torneg', 'maps/torneg.png', 11, 20, 9)]
     case Torneg = 2;
 
-    #[MapMeta('Karka-han', 'map3.png', 21, 30, 20)]
+    #[MapMeta('Karka-han', 'maps/karka-han.png', 21, 30, 20)]
     case KarkaHan = 3;
 
-    #[MapMeta('Werbin', 'map4.png', 31, 40, 30)]
+    #[MapMeta('Werbin', 'maps/werbin.png', 31, 40, 30)]
     case Werbin = 4;
 
     public function meta(): MapMeta
