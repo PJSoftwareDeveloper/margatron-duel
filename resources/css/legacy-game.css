@@ -382,9 +382,8 @@
   color: gold;
   font-size: 11px;
   width: 100%;
-  margin-top: 40%;
-  height: 50%;
-  align-items: center;
+  min-height: 40px;
+  padding: 5px;
   justify-content: center;
   
 }
@@ -415,8 +414,8 @@
   z-index: 5;
   transition: transform 0.2s, border-color 0.2s;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  flex-direction: column;
 }
 
 .map-location:hover {
