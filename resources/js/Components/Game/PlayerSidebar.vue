@@ -113,7 +113,7 @@ function sellInventoryItem(index: number): void {
         <div class="panel-section stats-section">
             <div class="section-header">STATYSTYKI</div>
             <div class="stat-row"><span class="label">Obrażenia:</span><span class="val">{{ props.user.dmgMin }}-{{ props.user.dmgMax }}</span></div>
-            <div class="stat-row"><span class="label">Punkty życia:</span><span class="val hp">{{ props.user.hp }}</span></div>
+            <div class="stat-row"><span class="label">Punkty życia:</span><span class="val hp">{{ props.user.hp }}/{{ props.user.hpMax }}</span></div>
             <div class="stat-row"><span class="label">Pancerz:</span><span class="val">{{ props.user.armor }}</span></div>
             <div class="stat-row"><span class="label">Cios kryt.:</span><span class="val">{{ props.user.critChance }}%</span></div>
             <div class="stat-row"><span class="label">Moc krytyka:</span><span class="val">{{ props.user.critPower }}%</span></div>

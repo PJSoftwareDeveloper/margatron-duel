@@ -32,6 +32,10 @@ final readonly class GameStateService
             'rest' => $this->rests->state($profile),
         ];
     }
+    public function heal(GameProfile $profile): void{
+        $profile->hp = $profile->hp_max;
+        $profile->save();
+    }
 
     public function selectMap(GameProfile $profile, int $mapId): GameProfile
     {

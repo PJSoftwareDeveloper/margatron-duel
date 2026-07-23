@@ -141,6 +141,8 @@ function actionPointRefreshDelay(): number {
     return Math.max(1, user.value.paRegenerationSeconds) * 1000;
 }
 
+
+
 async function refreshGameState(): Promise<void> {
     const response = await axios.get('/game/state');
     syncGame(response.data);
@@ -448,11 +450,12 @@ async function startNextBattle(): Promise<void> {
     await selectBattleStage(target);
 }
 
-function closeBattle(): void {
+async function closeBattle(): Promise<void> {
     battleResult.value = null;
     lastBattleStage.value = null;
     currentView.value = 'map';
     selectedLocation.value = null;
+    await action('/game/actions/heal',{});
 }
 
 async function action(url: string, data: Record<string, unknown> = {}): Promise<void> {
@@ -662,7 +665,7 @@ async function scrollLog(): Promise<void> {
                             :class="{ locked: stage.locked }"
                             @click="selectBattleStage(stage)"
                         >
-                            <div class="stage-background" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})`, backgroundPositionX: -(87 * (stage.stage-1)) + `px` }"></div>
+                            <div class="stage-background" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionX: -(87 * (stage.stage-1)) + `px` }"></div>
                             <div class="stage-content">
                                 <span class="stage-number">{{ stage.stage }}</span>
                                 <span class="stage-label">Etap {{ stage.stage }}</span>
@@ -684,7 +687,7 @@ async function scrollLog(): Promise<void> {
                                 <p>Tutaj możesz zmierzyć się z silnym przeciwnikiem.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})` }">
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
                             <div class="arena-buttons-container">
                                 <button class="arena-difficulty-btn easy" @click="startToughFight('elite')">
                                     <span class="difficulty-name">Walka z elitą</span>
@@ -715,7 +718,7 @@ async function scrollLog(): Promise<void> {
                                 <p class="arena-tip">Im trudniejsza walka, tym większa szansa na lepszą nagrodę.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})` }">
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
                             <div class="arena-buttons-container">
                                 <button class="arena-difficulty-btn easy" @click="startArenaFight('easy')">
                                     <span class="difficulty-name">Łatwa walka</span>
@@ -750,7 +753,7 @@ async function scrollLog(): Promise<void> {
                             </div>
                         </div>
 
-                        <div class="battle-visuals" :style="{ backgroundImage: `url(${selectedLocation.imageUrl})` }">
+                        <div class="battle-visuals" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
                             <div class="enemy-container">
                                 <img v-if="battleResult?.enemy.imageUrl" :src="battleResult.enemy.imageUrl" :alt="battleResult.enemy.name" class="enemy-image-pixel">
                             </div>

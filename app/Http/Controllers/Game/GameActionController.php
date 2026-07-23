@@ -28,6 +28,12 @@ use Illuminate\Http\Request;
 
 final class GameActionController extends Controller
 {
+    
+    public function heal(Request $request, GameProfileService $profiles, GameStateService $gameState, ActionPointRegenerationScheduler $actionPoints): JsonResponse
+    {
+        return $this->respondWithSnapshot($request, $profiles, $gameState, $actionPoints, fn ($profile) => $gameState->heal($profile));
+    }
+
     public function stageBattle(StageBattleRequest $request, GameProfileService $profiles, GameStateService $gameState, ActionPointRegenerationScheduler $actionPoints, BattleService $battles): JsonResponse
     {
         return $this->respondWithBattle($request, $profiles, $gameState, $actionPoints, fn ($profile) => $battles->fightStage(

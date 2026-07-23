@@ -204,6 +204,8 @@ final readonly class StaticGameCatalogRepository
                 'id' => 'blacksmith_1',
                 'name' => 'Sklep',
                 'items' => [
+                    $this->shopItem(300, 'Mocarna mikstura akcji', 'items/pa.gif', ItemType::Potion, ItemRarity::Legendary, 1, [], 0, ['type' => 'pa', 'value' => 1000]),
+
                     $this->shopItem(201, 'Miecz żelazny', 'items/sword.gif', ItemType::Weapon, ItemRarity::Common, 1, ['dmgMin' => 3, 'dmgMax' => 7], 150),
                     $this->shopItem(202, 'Topór wojenny', 'items/axe.gif', ItemType::Weapon, ItemRarity::Common, 3, ['dmgMin' => 5, 'dmgMax' => 10], 300),
                     $this->shopItem(203, 'Wzmocniony Sztylet', 'items/dagger.gif', ItemType::Weapon, ItemRarity::Unique, 5, ['dmgMin' => 4, 'dmgMax' => 8, 'critChance' => 3], 450),

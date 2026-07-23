@@ -63,6 +63,7 @@ final readonly class BattleService
         });
     }
 
+
     /**
      * @return array<string, mixed>
      */
@@ -303,7 +304,7 @@ final readonly class BattleService
      */
     private function applyDefeat(GameProfile $profile, array &$result): void
     {
-        $profile->hp = max(1, (int) floor($profile->hp_max * 0.3));
+        $profile->hp = $profile->hp_max;
         $profile->save();
         $result['log'][] = ['type' => 'defeat'];
     }

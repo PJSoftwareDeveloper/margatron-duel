@@ -35,6 +35,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/achievements', [AchievementController::class, 'index'])->name('achievements.index');
 
     Route::prefix('/game/actions')->name('game.actions.')->group(function (): void {
+        Route::post('/heal', [GameActionController::class, 'heal'])->name('heal');
         Route::post('/battle/stage', [GameActionController::class, 'stageBattle'])->name('battle.stage');
         Route::post('/battle/arena', [GameActionController::class, 'arenaBattle'])->name('battle.arena');
         Route::post('/battle/tough', [GameActionController::class, 'toughBattle'])->name('battle.tough');
