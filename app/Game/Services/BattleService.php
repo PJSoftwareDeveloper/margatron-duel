@@ -55,14 +55,11 @@ final readonly class BattleService
             if ($result['won']) {
                 $this->applyVictory($profile, $enemy, $result);
                 $this->gameState->unlockNextStage($profile, $map['id'], $locationId, $stage);
-            } else {
-                $this->applyDefeat($profile, $result);
             }
 
             return $result;
         });
     }
-
 
     /**
      * @return array<string, mixed>
@@ -93,8 +90,6 @@ final readonly class BattleService
 
             if ($result['won']) {
                 $this->applyVictory($profile, $enemy, $result, $difficulty);
-            } else {
-                $this->applyDefeat($profile, $result);
             }
 
             return $result;
@@ -146,8 +141,6 @@ final readonly class BattleService
 
             if ($result['won']) {
                 $this->applyVictory($profile, $enemy, $result, $difficulty);
-            } else {
-                $this->applyDefeat($profile, $result);
             }
 
             return $result;
@@ -231,6 +224,10 @@ final readonly class BattleService
      */
     private function result(string $name, array $enemy, bool $won, int $playerHp, int $enemyHp, array $log, ?ArenaDifficulty $arenaDifficulty): array
     {
+        if (! $won) {
+            $log[] = ['type' => 'defeat'];
+        }
+
         return [
             'name' => $name,
             'enemy' => $enemy,
@@ -257,7 +254,6 @@ final readonly class BattleService
     {
         $profile->forceFill([
             'gold' => $profile->gold + $enemy['gold'],
-            'hp' => $profile->hp_max,
             'monsters_killed' => $profile->monsters_killed + 1,
         ])->save();
 
@@ -297,16 +293,6 @@ final readonly class BattleService
                 'color' => (string) $drop['rarityColor'],
             ];
         }
-    }
-
-    /**
-     * @param  array<string, mixed>  $result
-     */
-    private function applyDefeat(GameProfile $profile, array &$result): void
-    {
-        $profile->hp = $profile->hp_max;
-        $profile->save();
-        $result['log'][] = ['type' => 'defeat'];
     }
 
     /**

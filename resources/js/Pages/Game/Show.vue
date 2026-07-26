@@ -54,6 +54,7 @@ const inventoryFiltered = computed(() => inventory.value.filter(Boolean) as Item
 const currentShop = computed(() => currentShopId.value ? game.value.shops[currentShopId.value] : null);
 const shopName = computed(() => currentShop.value?.name ?? '');
 const shopItems = computed(() => currentShop.value?.items ?? []);
+const paOffers = computed(() => game.value.paOffers);
 const instantRestConfig = computed(() => game.value.rest.instant);
 const battleStages = computed(() => selectedBattleLocation.value?.stages?.map((stage) => ({
     ...stage,
@@ -554,9 +555,17 @@ async function addAttribute(attribute: PlayerAttributeKey): Promise<void> {
     await action('/game/actions/attribute', { attribute });
 }
 
-async function buyPA(amount: number, price: number): Promise<void> {
-    await action('/game/actions/pa', { amount, price });
+async function buyPA(amount: 5 | 10 | 15): Promise<void> {
+    await action('/game/actions/pa', { amount });
     showPAShop.value = false;
+}
+
+function paOfferName(amount: 5 | 10 | 15): string {
+    return {
+        5: 'Mała butelka PA',
+        10: 'Średnia butelka PA',
+        15: 'Duża butelka PA',
+    }[amount];
 }
 
 function showItemInfo(item: Item | null | undefined): void {
@@ -937,20 +946,16 @@ async function scrollLog(): Promise<void> {
             <div class="modal-content pa-shop">
                 <h2>Sklep z PA</h2>
                 <div class="shop-items">
-                    <div class="shop-item" @click="buyPA(5, Math.round(100 * user.level *0.1111))">
-                        <span class="item-name">Mała butelka PA</span>
-                        <span class="item-bonus">+5 PA</span>
-                        <span class="item-price">💰 {{Math.round(100 * user.level *0.1111)}}</span>
-                    </div>
-                    <div class="shop-item" @click="buyPA(10, Math.round(180 * user.level * 0.1111))">
-                        <span class="item-name">Średnia butelka PA</span>
-                        <span class="item-bonus">+10 PA</span>
-                        <span class="item-price">💰 {{ Math.round(180 * user.level * 0.1111)}}</span>
-                    </div>
-                    <div class="shop-item" @click="buyPA(15, Math.round(250 * user.level * 0.1111))">
-                        <span class="item-name">Duża butelka PA</span>
-                        <span class="item-bonus">+15 PA</span>
-                        <span class="item-price">💰 {{ Math.round(250 * user.level * 0.1111) }}</span>
+                    <div
+                        v-for="offer in paOffers"
+                        :key="offer.amount"
+                        class="shop-item"
+                        :class="{ 'cant-afford': user.gold < offer.price }"
+                        @click="buyPA(offer.amount)"
+                    >
+                        <span class="item-name">{{ paOfferName(offer.amount) }}</span>
+                        <span class="item-bonus">+{{ offer.amount }} PA</span>
+                        <span class="item-price">💰 {{ offer.price }}</span>
                     </div>
                 </div>
                 <button class="btn-close" @click="showPAShop = false">Zamknij</button>
@@ -993,7 +998,6 @@ async function scrollLog(): Promise<void> {
                 <br/>
                 <i v-if="tooltipItem.dmgMin !== undefined" class="idesc">Obrażenia: {{ tooltipItem.dmgMin }}-{{ tooltipItem.dmgMax }}</i>
                 <i v-if="tooltipItem.armor !== undefined" class="idesc">Pancerz: {{ tooltipItem.armor }}</i>
-                <i v-if="tooltipItem.effect === 'heal'" class="idesc">Leczy {{ tooltipItem.effectValue }} punktów życia</i>
                 <i v-if="tooltipItem.effect === 'pa'" class="idesc">Przywraca {{ tooltipItem.effectValue }} PA</i>
                 <i v-for="stat in bonusRows(tooltipItem)" :key="stat.key" class="idesc">{{ stat.name }}: {{ stat.value }}{{ stat.suffix }}</i>
                 
@@ -1014,7 +1018,6 @@ async function scrollLog(): Promise<void> {
                 <div class="tip-divider"></div>
                 <i v-if="tooltipItem.dmgMin !== undefined" class="idesc stat-dmg">Obrażenia: {{ tooltipItem.dmgMin }}-{{ tooltipItem.dmgMax }}</i>
                 <i v-if="tooltipItem.armor !== undefined" class="idesc stat-dmg">Pancerz: +{{ tooltipItem.armor }}</i>
-                <i v-if="tooltipItem.effect === 'heal'" class="idesc stat-heal">Leczy {{ tooltipItem.effectValue }} punktów życia</i>
                 <i v-if="tooltipItem.effect === 'pa'" class="idesc stat-heal">Przywraca {{ tooltipItem.effectValue }} PA</i>
                 <i v-for="stat in bonusRows(tooltipItem)" :key="stat.key" class="idesc stat-bonus">+{{ stat.value }}{{ stat.suffix }} {{ stat.name }}</i>
                 <div class="tip-divider"></div>

@@ -41,7 +41,6 @@ final readonly class GameProfileService
             'luck_points_assigned' => 0,
             'attribute_points' => 0,
             'hp' => 50,
-            'hp_max' => 50,
             'dmg_min' => 1,
             'dmg_max' => 2,
             'armor' => 0,
@@ -191,21 +190,20 @@ final readonly class GameProfileService
         $critPowerBonus = $this->stat($weapon, 'critPower') + $this->stat($accessory, 'critPower');
         $dodgeBonus = $this->stat($armor, 'dodge') + $this->stat($accessory, 'dodge');
         $stunBonus = $this->stat($weapon, 'stun') + $this->stat($accessory, 'stun');
-        $newHpMax = 50 + (($profile->vitality - 5) * 10) + (($profile->level - 1) * 5) + $hpBonus;
+        $hp = 50 + (($profile->vitality - 5) * 10) + (($profile->level - 1) * 5) + $hpBonus;
 
         $critChance = 5 + $critChanceBonus + (int) floor($profile->luck / 3);
         $dodgeChance = 2 + $dodgeBonus + (int) floor($profile->luck / 5);
 
         $profile->forceFill([
-            'hp_max' => max(1, $newHpMax),
-            'hp' => min($profile->hp, max(1, $newHpMax)),
+            'hp' => max(1, $hp),
             'dmg_min' => $baseDmgMin + (int) floor($profile->strength / 2),
             'dmg_max' => $baseDmgMax + $profile->strength,
             'armor' => $baseArmor,
-            'crit_chance' => $critChance <= 50 ? $critChance : 50,
+            'crit_chance' => min(50, $critChance),
             'crit_power' => 150 + $critPowerBonus,
-            'dodge' => $dodgeChance <= 40 ? $dodgeChance : 40,
-            'stun' => $stunBonus <= 40 ? $stunBonus : 50,
+            'dodge' => min(40, $dodgeChance),
+            'stun' => min(40, $stunBonus),
         ])->save();
 
         return $profile->refresh();
@@ -232,7 +230,6 @@ final readonly class GameProfileService
         $profile->exp = $currentExp;
 
         if ($levelsGained > 0) {
-            $profile->hp = 999_999;
             $profile->pa_regenerated_at = now();
         }
 
@@ -260,10 +257,6 @@ final readonly class GameProfileService
             $profile->attribute_points--;
             $profile->{$attribute->value}++;
             $profile->{$assignedColumn} = ((int) $profile->{$assignedColumn}) + 1;
-
-            if ($attribute === PlayerAttribute::Vitality) {
-                $profile->hp += 10;
-            }
 
             $profile->save();
             $this->recalculate($profile);

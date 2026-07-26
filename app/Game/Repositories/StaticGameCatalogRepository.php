@@ -232,9 +232,6 @@ final readonly class StaticGameCatalogRepository
             //     'id' => 'alchemist_1',
             //     'name' => 'Sklep',
             //     'items' => [
-            //         $this->shopItem(301, 'Mała mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'heal', 'value' => 20]),
-            //         $this->shopItem(302, 'Średnia mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 3, [], 80, ['type' => 'heal', 'value' => 50]),
-            //         $this->shopItem(303, 'Duża mikstura życia', 'items/health.gif', ItemType::Potion, ItemRarity::Common, 5, [], 150, ['type' => 'heal', 'value' => 100]),
             //         $this->shopItem(311, 'Mała butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 1, [], 0, ['type' => 'pa', 'value' => 5]),
             //         $this->shopItem(312, 'Średnia butelka PA', 'items/pa.gif', ItemType::Potion, ItemRarity::Common, 5, [], 180, ['type' => 'pa', 'value' => 10]),
             //         $this->shopItem(321, 'Eliksir Siły', 'items/strength.gif', ItemType::Potion, ItemRarity::Unique, 4, ['strength' => 3], 200, ['type' => 'buff_strength', 'value' => 3]),

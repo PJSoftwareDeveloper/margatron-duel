@@ -14,6 +14,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -63,11 +64,68 @@ final class GameFlowTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Game/Show')
-                ->where('app.version', '0.1.2')
+                ->where('app.version', '0.1.3')
                 ->has('game.data.user')
                 ->where('game.data.user.level', 1)
                 ->where('game.data.currentMap.name', 'Ithan')
+                ->where('game.data.paOffers.0.amount', 5)
+                ->where('game.data.paOffers.0.price', 11)
             );
+    }
+
+    public function test_profile_exposes_one_hp_stat_without_persisting_separate_current_hp(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->getJson('/game/state')
+            ->assertOk()
+            ->assertJsonPath('data.user.hp', 50)
+            ->assertJsonMissingPath('data.user.hpMax');
+
+        $this->assertTrue(Schema::hasColumn('game_profiles', 'hp'));
+        $this->assertFalse(Schema::hasColumn('game_profiles', 'hp_max'));
+    }
+
+    public function test_buying_pa_uses_the_price_calculated_by_the_backend(): void
+    {
+        $user = User::factory()->create();
+        GameProfile::factory()->for($user)->create([
+            'level' => 3,
+            'gold' => 100,
+            'pa' => 20,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/game/actions/pa', [
+                'amount' => 10,
+                'price' => -1_000,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.user.gold', 40)
+            ->assertJsonPath('data.user.pa', 30)
+            ->assertJsonPath('data.paOffers.1.amount', 10)
+            ->assertJsonPath('data.paOffers.1.price', 60);
+
+        $profile = GameProfile::query()->whereBelongsTo($user)->firstOrFail();
+
+        $this->assertSame(40, $profile->gold);
+        $this->assertSame(30, $profile->pa);
+    }
+
+    public function test_recalculation_caps_stun_at_forty_percent(): void
+    {
+        $profile = GameProfile::factory()->create([
+            'equipped' => [
+                'weapon' => ['stats' => ['stun' => 30]],
+                'armor' => null,
+                'accessory' => ['stats' => ['stun' => 20]],
+            ],
+        ]);
+
+        app(GameProfileService::class)->recalculate($profile);
+
+        $this->assertSame(40.0, $profile->refresh()->stun);
     }
 
     public function test_stage_battle_consumes_pa_and_returns_updated_snapshot(): void

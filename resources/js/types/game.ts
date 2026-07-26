@@ -45,7 +45,6 @@ export type Player = {
     luck: number;
     attributePoints: number;
     hp: number;
-    hpMax: number;
     dmgMin: number;
     dmgMax: number;
     armor: number;
@@ -162,11 +161,17 @@ export type Shop = {
     items: Item[];
 };
 
+export type PaOffer = {
+    amount: 5 | 10 | 15;
+    price: number;
+};
+
 export type GameSnapshot = {
     user: Player;
     currentMap: GameMap;
     worldMaps: WorldMap[];
     shops: Record<string, Shop>;
+    paOffers: PaOffer[];
     rest: RestState;
 };
 
