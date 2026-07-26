@@ -27,7 +27,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'luck_points_assigned',
     'attribute_points',
     'hp',
-    'hp_max',
     'dmg_min',
     'dmg_max',
     'armor',

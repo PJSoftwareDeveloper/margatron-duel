@@ -9,6 +9,19 @@ use DomainException;
 
 final readonly class GameStateService
 {
+    /**
+     * Prices from the PA shop before applying the level multiplier.
+     *
+     * @var array<int, int>
+     */
+    private const array PA_BASE_PRICES = [
+        5 => 100,
+        10 => 180,
+        15 => 250,
+    ];
+
+    private const float PA_LEVEL_PRICE_FACTOR = 0.1111;
+
     public function __construct(
         private StaticGameCatalogRepository $catalog,
         private GameProfileService $profiles,
@@ -29,6 +42,7 @@ final readonly class GameStateService
             'map' => $map,
             'worldMaps' => $this->worldMaps($profile),
             'shops' => $this->catalog->shops(),
+            'paOffers' => $this->paOffers($profile),
             'rest' => $this->rests->state($profile),
         ];
     }
@@ -57,8 +71,10 @@ final readonly class GameStateService
         return $this->rests->instant($profile);
     }
 
-    public function buyPa(GameProfile $profile, int $amount, int $price): GameProfile
+    public function buyPa(GameProfile $profile, int $amount): GameProfile
     {
+        $price = $this->calculatePaPrice($profile, $amount);
+
         if ($profile->gold < $price) {
             throw new DomainException('Masz za mało złota.');
         }
@@ -70,6 +86,20 @@ final readonly class GameStateService
         ])->save();
 
         return $profile->refresh();
+    }
+
+    /**
+     * @return array<int, array{amount: int, price: int}>
+     */
+    public function paOffers(GameProfile $profile): array
+    {
+        return array_map(
+            fn (int $amount): array => [
+                'amount' => $amount,
+                'price' => $this->calculatePaPrice($profile, $amount),
+            ],
+            array_keys(self::PA_BASE_PRICES),
+        );
     }
 
     public function unlockedStage(GameProfile $profile, int $mapId, string $locationId): int
@@ -132,5 +162,16 @@ final readonly class GameStateService
                 'current' => $map !== null && $profile->current_map_id === $map['id'],
             ];
         }, $this->catalog->worldMapPositions());
+    }
+
+    private function calculatePaPrice(GameProfile $profile, int $amount): int
+    {
+        $basePrice = self::PA_BASE_PRICES[$amount] ?? null;
+
+        if ($basePrice === null) {
+            throw new DomainException('Nieprawidłowa ilość PA.');
+        }
+
+        return (int) round($basePrice * max(1, $profile->level) * self::PA_LEVEL_PRICE_FACTOR);
     }
 }

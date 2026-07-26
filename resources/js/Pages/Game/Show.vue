@@ -2,12 +2,12 @@
 import BattleLogEntry from '@/Components/Game/BattleLogEntry.vue';
 import GameTopBar from '@/Components/Game/GameTopBar.vue';
 import PlayerSidebar from '@/Components/Game/PlayerSidebar.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { echo } from '@/echo';
 import type { AxiosError } from 'axios';
-import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, GameSnapshot, Item, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
+import type { ActionPointsChangedEvent, ActionPointState, BattleResult, EquipmentSlot, Player, GameSnapshot, Item, Npc, Location, PlayerAttributeKey, RestOption, Stage } from '@/types/game';
 
 
 type Resource<T> = T | { data: T };
@@ -41,6 +41,7 @@ let actionPointFlashTimer: number | undefined;
 let restCountdownTimer: number | undefined;
 let restRefreshTimer: number | undefined;
 let isGameViewDisposed = false;
+let stageCount: number | null = null;
 const actionPointChannel = `users.${game.value.user.id}`;
 const actionPointFallbackGraceMs = 2000;
 const restFallbackGraceMs = 1500;
@@ -53,6 +54,7 @@ const inventoryFiltered = computed(() => inventory.value.filter(Boolean) as Item
 const currentShop = computed(() => currentShopId.value ? game.value.shops[currentShopId.value] : null);
 const shopName = computed(() => currentShop.value?.name ?? '');
 const shopItems = computed(() => currentShop.value?.items ?? []);
+const paOffers = computed(() => game.value.paOffers);
 const instantRestConfig = computed(() => game.value.rest.instant);
 const battleStages = computed(() => selectedBattleLocation.value?.stages?.map((stage) => ({
     ...stage,
@@ -61,6 +63,7 @@ const battleStages = computed(() => selectedBattleLocation.value?.stages?.map((s
 })) ?? []);
 
 const mapLocations = computed(() => currentMap.value.locations.map((location) => decorateLocation(location)));
+const mapNpcs = computed(() => currentMap.value.npcs.map((npc) => npc));
 
 function unwrap<T extends object>(resource: Resource<T>): T {
     return 'data' in resource ? resource.data : resource;
@@ -139,6 +142,8 @@ function actionPointRefreshDelay(): number {
 
     return Math.max(1, user.value.paRegenerationSeconds) * 1000;
 }
+
+
 
 async function refreshGameState(): Promise<void> {
     const response = await axios.get('/game/state');
@@ -252,24 +257,38 @@ function formatCountdown(seconds: number): string {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
 
-function showTooltip(item: Item | null | undefined, event: MouseEvent): void {
-    if (!item) {
-        return;
-    }
+async function showTooltip(item: Item | null | undefined, event: MouseEvent): Promise<void> {
+    if (!item) return;
 
     tooltipItem.value = item;
-    const offset = 15;
-    tooltipX.value = event.clientX + offset;
-    tooltipY.value = event.clientY + offset;
 
-    if (tooltipX.value + 280 > window.innerWidth) {
-        tooltipX.value = event.clientX - 295;
+    const el = event.currentTarget as HTMLElement;
+    const rect = el.getBoundingClientRect();
+
+    await nextTick(); 
+
+    const tooltipEl = document.getElementById('tip');
+    if (!tooltipEl) return;
+
+    const tooltipWidth = tooltipEl.offsetWidth;
+    const tooltipHeight = tooltipEl.offsetHeight;
+    const offset = 10;
+
+    let x = rect.left - (tooltipWidth - 32)/2;
+    let y = rect.top - tooltipHeight - offset;
+
+    if (y < 0) {
+        y = rect.bottom + offset;
     }
 
-    if (tooltipY.value + 250 > window.innerHeight) {
-        tooltipY.value = event.clientY - 265;
+    if (x + tooltipWidth > window.innerWidth) {
+        x = window.innerWidth - tooltipWidth - offset;
     }
+
+    tooltipX.value = x;
+    tooltipY.value = y;
 }
+
 
 function hideTooltip(): void {
     tooltipItem.value = null;
@@ -363,11 +382,9 @@ function confirmEnterLocation(): void {
     } else if (location.type === 'arena') {
         currentView.value = 'arena';
     }else if (location.type === 'toughenemy') {
-        selectedBattleLocation.value = location;
         currentView.value = 'toughenemy';
     }
 
-    selectedLocation.value = null;
 }
 
 function goBackToMap(): void {
@@ -382,27 +399,37 @@ async function selectWorldMap(worldMap: { id: number; locked: boolean }): Promis
 
     await action('/game/actions/map', { mapId: worldMap.id });
     currentView.value = 'map';
+    selectedLocation.value = null;
 }
 
 async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean }): Promise<void> {
     if (stage.locked || !selectedBattleLocation.value) {
         return;
     }
-
+    if (stageCount == null) stageCount = 10;
     lastBattleStage.value = stage.stage;
-    const response = await axios.post('/game/actions/battle/stage', {
-        locationId: selectedBattleLocation.value.id,
-        stage: stage.stage,
-    });
-    battleResult.value = response.data.battle;
-    syncGame(response.data.game);
-    currentView.value = 'battle';
-    await scrollLog();
+
+    
+
+    try{
+        const response = await axios.post('/game/actions/battle/stage', {
+            locationId: selectedBattleLocation.value.id,
+            stage: stage.stage,
+        });
+        stageCount -= 1;
+        battleResult.value = response.data.battle;
+        syncGame(response.data.game);
+        currentView.value = 'battle';
+        await scrollLog();
+    }
+    catch (error) {
+        showActionError(error);
+    }
 }
 
 
 async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<void> {
-    if (!selectedBattleLocation.value) {
+    if (!selectedLocation.value) {
         return;
     }
 
@@ -410,7 +437,7 @@ async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<
 
     try{
         const response = await axios.post('/game/actions/battle/tough', {
-            locationId: selectedBattleLocation.value.id,
+            locationId: selectedLocation.value.id,
             enemyType: enemyType,
         });
 
@@ -433,6 +460,7 @@ async function startArenaFight(difficulty: 'easy' | 'medium' | 'hard'): Promise<
 }
 
 async function startNextBattle(): Promise<void> {
+    
     if (!selectedBattleLocation.value || !lastBattleStage.value) {
         closeBattle();
         return;
@@ -445,14 +473,15 @@ async function startNextBattle(): Promise<void> {
         closeBattle();
         return;
     }
-
     await selectBattleStage(target);
 }
 
-function closeBattle(): void {
+async function closeBattle(): Promise<void> {
+    stageCount = null;
     battleResult.value = null;
     lastBattleStage.value = null;
     currentView.value = 'map';
+    selectedLocation.value = null;
 }
 
 async function action(url: string, data: Record<string, unknown> = {}): Promise<void> {
@@ -526,9 +555,17 @@ async function addAttribute(attribute: PlayerAttributeKey): Promise<void> {
     await action('/game/actions/attribute', { attribute });
 }
 
-async function buyPA(amount: 5 | 10 | 15, price: 100 | 180 | 250): Promise<void> {
-    await action('/game/actions/pa', { amount, price });
+async function buyPA(amount: 5 | 10 | 15): Promise<void> {
+    await action('/game/actions/pa', { amount });
     showPAShop.value = false;
+}
+
+function paOfferName(amount: 5 | 10 | 15): string {
+    return {
+        5: 'Mała butelka PA',
+        10: 'Średnia butelka PA',
+        15: 'Duża butelka PA',
+    }[amount];
 }
 
 function showItemInfo(item: Item | null | undefined): void {
@@ -609,11 +646,20 @@ async function scrollLog(): Promise<void> {
                             <div class="map-name-label">{{ currentMap.name }}</div>
 
                             <div
+                                v-for="npc in mapNpcs"
+                                :key="npc.id"
+                                class="map-npc"
+                                :style="{ position: 'absolute', left: npc.x * 32 + 'px', top: npc.y * 32 + 'px', backgroundImage: `url(${npc.imageUrl})`, width: npc.width + 'px', height: npc.height + 'px' }"
+                                :alt-text="npc.name"
+                                >
+
+                            </div>
+                            <div
                                 v-for="location in mapLocations"
                                 :key="location.id"
                                 class="map-location"
                                 :class="[location.type, { locked: location.locked }]"
-                                :style="{ left: location.x + '%', top: location.y + '%' }"
+                                :style="{ left: location.x * 32 + 'px', top: location.y * 32 + 'px', width: location.width * 32 + 'px', height: location.height * 32 + 'px', }"
                                 
                                 @click="enterLocation(location)"
                             >
@@ -653,7 +699,7 @@ async function scrollLog(): Promise<void> {
                             :class="{ locked: stage.locked }"
                             @click="selectBattleStage(stage)"
                         >
-                            <div class="stage-background" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }"></div>
+                            <div class="stage-background" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionX: -(87 * (stage.stage-1)) + `px` }"></div>
                             <div class="stage-content">
                                 <span class="stage-number">{{ stage.stage }}</span>
                                 <span class="stage-label">Etap {{ stage.stage }}</span>
@@ -675,7 +721,7 @@ async function scrollLog(): Promise<void> {
                                 <p>Tutaj możesz zmierzyć się z silnym przeciwnikiem.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
                             <div class="arena-buttons-container">
                                 <button class="arena-difficulty-btn easy" @click="startToughFight('elite')">
                                     <span class="difficulty-name">Walka z elitą</span>
@@ -706,7 +752,7 @@ async function scrollLog(): Promise<void> {
                                 <p class="arena-tip">Im trudniejsza walka, tym większa szansa na lepszą nagrodę.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
+                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
                             <div class="arena-buttons-container">
                                 <button class="arena-difficulty-btn easy" @click="startArenaFight('easy')">
                                     <span class="difficulty-name">Łatwa walka</span>
@@ -741,8 +787,10 @@ async function scrollLog(): Promise<void> {
                             </div>
                         </div>
 
-                        <div class="battle-visuals" :style="{ backgroundImage: `url(${currentMap.imageUrl})` }">
-                            <div class="enemy-container">
+                        <div class="battle-visuals" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
+                            
+                            <div v-if="stageCount != null && stageCount <= 0" class="battle-info">Wyprawa zakończona</div>
+                            <div v-else class="enemy-container">
                                 <img v-if="battleResult?.enemy.imageUrl" :src="battleResult.enemy.imageUrl" :alt="battleResult.enemy.name" class="enemy-image-pixel">
                             </div>
 
@@ -760,7 +808,7 @@ async function scrollLog(): Promise<void> {
                                     <span v-else class="lose">Walka przegrana</span>
                                 </div>
                                 <div class="battle-buttons">
-                                    <button v-if="canContinueBattle" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
+                                    <button v-if="canContinueBattle && stageCount != null && stageCount > 0" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
                                     <button class="btn-battle-action" @click="closeBattle">Wróć do mapy</button>
                                 </div>
                             </div>
@@ -770,7 +818,7 @@ async function scrollLog(): Promise<void> {
 
                 <div v-else-if="currentView === 'shop'" class="inline-view shop-inline">
                     <div class="inline-header">{{ shopName }}</div>
-                    <div class="shop-main-content">
+                    <div class="shop-main-content" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionY: (60)+`%`, backgroundSize: `100%` }">
                         <div class="shop-tabs">
                             <button :class="{ active: shopTab === 'buy' }" @click="shopTab = 'buy'">Kup</button>
                             <button :class="{ active: shopTab === 'sell' }" @click="shopTab = 'sell'">Sprzedaj</button>
@@ -821,7 +869,12 @@ async function scrollLog(): Promise<void> {
 
                 <div v-else-if="currentView === 'rest'" class="inline-view rest-inline">
                     <div class="inline-header">Odpoczynek</div>
-                    <div class="rest-content">
+                    <div class="rest-content" :style="{ 
+                        backgroundImage: `url(${selectedLocation?.imageUrl})`, 
+                        backgroundPositionY: (60)+`%`, 
+                        backgroundSize: `100%` 
+                        }">
+                    
                         <p class="rest-description">Odpocznij, aby zregenerować PA szybciej.</p>
                         <div class="rest-options">
                             <button
@@ -893,20 +946,16 @@ async function scrollLog(): Promise<void> {
             <div class="modal-content pa-shop">
                 <h2>Sklep z PA</h2>
                 <div class="shop-items">
-                    <div class="shop-item" @click="buyPA(5, 100)">
-                        <span class="item-name">Mała butelka PA</span>
-                        <span class="item-bonus">+5 PA</span>
-                        <span class="item-price">💰 100</span>
-                    </div>
-                    <div class="shop-item" @click="buyPA(10, 180)">
-                        <span class="item-name">Średnia butelka PA</span>
-                        <span class="item-bonus">+10 PA</span>
-                        <span class="item-price">💰 180</span>
-                    </div>
-                    <div class="shop-item" @click="buyPA(15, 250)">
-                        <span class="item-name">Duża butelka PA</span>
-                        <span class="item-bonus">+15 PA</span>
-                        <span class="item-price">💰 250</span>
+                    <div
+                        v-for="offer in paOffers"
+                        :key="offer.amount"
+                        class="shop-item"
+                        :class="{ 'cant-afford': user.gold < offer.price }"
+                        @click="buyPA(offer.amount)"
+                    >
+                        <span class="item-name">{{ paOfferName(offer.amount) }}</span>
+                        <span class="item-bonus">+{{ offer.amount }} PA</span>
+                        <span class="item-price">💰 {{ offer.price }}</span>
                     </div>
                 </div>
                 <button class="btn-close" @click="showPAShop = false">Zamknij</button>
@@ -949,7 +998,6 @@ async function scrollLog(): Promise<void> {
                 <br/>
                 <i v-if="tooltipItem.dmgMin !== undefined" class="idesc">Obrażenia: {{ tooltipItem.dmgMin }}-{{ tooltipItem.dmgMax }}</i>
                 <i v-if="tooltipItem.armor !== undefined" class="idesc">Pancerz: {{ tooltipItem.armor }}</i>
-                <i v-if="tooltipItem.effect === 'heal'" class="idesc">Leczy {{ tooltipItem.effectValue }} punktów życia</i>
                 <i v-if="tooltipItem.effect === 'pa'" class="idesc">Przywraca {{ tooltipItem.effectValue }} PA</i>
                 <i v-for="stat in bonusRows(tooltipItem)" :key="stat.key" class="idesc">{{ stat.name }}: {{ stat.value }}{{ stat.suffix }}</i>
                 
@@ -970,7 +1018,6 @@ async function scrollLog(): Promise<void> {
                 <div class="tip-divider"></div>
                 <i v-if="tooltipItem.dmgMin !== undefined" class="idesc stat-dmg">Obrażenia: {{ tooltipItem.dmgMin }}-{{ tooltipItem.dmgMax }}</i>
                 <i v-if="tooltipItem.armor !== undefined" class="idesc stat-dmg">Pancerz: +{{ tooltipItem.armor }}</i>
-                <i v-if="tooltipItem.effect === 'heal'" class="idesc stat-heal">Leczy {{ tooltipItem.effectValue }} punktów życia</i>
                 <i v-if="tooltipItem.effect === 'pa'" class="idesc stat-heal">Przywraca {{ tooltipItem.effectValue }} PA</i>
                 <i v-for="stat in bonusRows(tooltipItem)" :key="stat.key" class="idesc stat-bonus">+{{ stat.value }}{{ stat.suffix }} {{ stat.name }}</i>
                 <div class="tip-divider"></div>

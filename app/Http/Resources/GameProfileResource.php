@@ -32,7 +32,6 @@ final class GameProfileResource extends JsonResource
             'luck' => $this->luck,
             'attributePoints' => $this->attribute_points,
             'hp' => $this->hp,
-            'hpMax' => $this->hp_max,
             'dmgMin' => $this->dmg_min,
             'dmgMax' => $this->dmg_max,
             'armor' => $this->armor,

@@ -64,12 +64,21 @@ final readonly class ItemFactory
         } elseif ($type === ItemType::Talisman) {
             $bonusStats = $this->generateBonusStats($type, max(1, $meta->bonusStats), $level, $meta->statMultiplier);
             $stats = $this->flattenBonusStats($bonusStats);
-        } else {
-            $scale = 1 + ($level * 0.1);
+        } 
+        else { 
             $effect = $base['effect'];
-            $effect['value'] = max(1, (int) floor($effect['value'] * $scale * $meta->statMultiplier));
+
+            $effect['value'] = $this->rollPotionEffect($effect['type'], $rarity);
+
             $bonusStats = [];
         }
+        // else {
+        //     $scale = 1 + ($level * 0.1);
+        //     $effect = $base['effect'];
+        //     $effect['value'] = max(1, (int) floor($effect['value'] * $scale * $meta->statMultiplier));
+        //     $bonusStats = [];
+        // }
+
 
         $power = $this->power($type, $stats, $effect, $meta->statMultiplier);
         $price = (int) floor($power * $meta->priceMultiplier);
@@ -100,16 +109,39 @@ final readonly class ItemFactory
         ];
     }
 
+    private function rollPotionEffect(string $effectType, ItemRarity $rarity): int
+    {
+        $ranges = $this->catalog->potionEffectRanges();
+        if (!isset($ranges[$effectType])) {
+            return 1;
+        }
+        [$min, $max] = $ranges[$effectType][$rarity->value];
+        return random_int($min, $max);
+    }
+
+
     private function rollRarity(int $luckBonus, ?ArenaDifficulty $arenaDifficulty): ItemRarity
     {
         $chances = $this->catalog->baseDropChances();
-        $luckMod = $luckBonus / 2;
+        $luckMod = sqrt($luckBonus)*2;
         $arenaBonus = $arenaDifficulty?->rarityBonus() ?? 0;
 
-        $legendaryChance = $chances[ItemRarity::Legendary->value] + ($luckMod * 0.1) + ($arenaBonus * 0.2);
-        $heroicChance = $chances[ItemRarity::Heroic->value] + $luckMod * 0.3 + ($arenaBonus * 0.3) - $legendaryChance;
-        $uniqueChance = $chances[ItemRarity::Unique->value] + $luckMod * 0.6 + ($arenaBonus * 0.5) - $heroicChance - $legendaryChance;
+        $legendaryBonus = $chances[ItemRarity::Legendary->value] + ($luckMod * 0.1) + ($arenaBonus * 0.1);
+        $heroicBonus = $chances[ItemRarity::Heroic->value] + ($luckMod * 0.3) + ($arenaBonus * 0.3);
+        $uniqueBonus = $chances[ItemRarity::Unique->value] + ($luckMod * 0.6) + ($arenaBonus * 0.5);
+
+        $legendaryChance = ($legendaryBonus) <= 100 ? $legendaryBonus : 100;
+
+        $heroicChance = ($legendaryChance + $heroicBonus) <= 100 ? $heroicBonus : 
+            ((100 - $legendaryChance) >= 0 ? (100 - $legendaryChance) : 0);
+        
+        $uniqueChance = ($legendaryChance + $heroicChance + $uniqueBonus) <= 100 ? $uniqueBonus : 
+            ((100 - $legendaryChance - $heroicChance) >= 0 ? (100 - $legendaryChance - $heroicChance) : 0);
+
+
         $commonChance = 100 - $uniqueChance - $heroicChance - $legendaryChance;
+        if($commonChance < 0) $commonChance = 0;
+
 
         $chances[ItemRarity::Legendary->value] = $legendaryChance;
         $chances[ItemRarity::Heroic->value] = $heroicChance;

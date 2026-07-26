@@ -45,7 +45,6 @@ export type Player = {
     luck: number;
     attributePoints: number;
     hp: number;
-    hpMax: number;
     dmgMin: number;
     dmgMax: number;
     armor: number;
@@ -97,12 +96,27 @@ export type Stage = {
     locked?: boolean;
 };
 
+export type Npc = {
+    id: string;
+    name: string;
+    image: string;
+    imageUrl: string;
+    x: number;
+    y: number;
+    height: number;
+    width: number;
+}
+
 export type Location = {
     id: string;
     name: string;
     type: 'battle' | 'arena' | 'toughenemy' | 'shop' | 'rest' | 'worldmap';
+    image: string;
+    imageUrl: string;
     x: number;
     y: number;
+    width: number;
+    height: number;
     pa?: number;
     paCost?: number;
     levelReq?: number;
@@ -128,6 +142,7 @@ export type GameMap = {
         max: number;
     };
     locations: Location[];
+    npcs: Npc[];
 };
 
 export type WorldMap = {
@@ -146,11 +161,17 @@ export type Shop = {
     items: Item[];
 };
 
+export type PaOffer = {
+    amount: 5 | 10 | 15;
+    price: number;
+};
+
 export type GameSnapshot = {
     user: Player;
     currentMap: GameMap;
     worldMaps: WorldMap[];
     shops: Record<string, Shop>;
+    paOffers: PaOffer[];
     rest: RestState;
 };
 

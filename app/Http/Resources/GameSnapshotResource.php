@@ -19,6 +19,7 @@ final class GameSnapshotResource extends JsonResource
             'currentMap' => $this->resource['map'],
             'worldMaps' => $this->resource['worldMaps'],
             'shops' => $this->resource['shops'],
+            'paOffers' => $this->resource['paOffers'],
             'rest' => $this->resource['rest'],
         ];
     }

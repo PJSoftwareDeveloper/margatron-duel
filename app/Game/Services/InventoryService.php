@@ -209,7 +209,6 @@ final readonly class InventoryService
         $value = (int) ($effect['value'] ?? 0);
 
         match ($effect['type'] ?? null) {
-            'heal' => $profile->hp = min($profile->hp_max, $profile->hp + $value),
             'pa' => $this->restoreActionPoints($profile, $value),
             'buff_strength' => $profile->strength += $value,
             'buff_crit' => $profile->crit_chance += $value,

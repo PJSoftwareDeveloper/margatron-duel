@@ -2,7 +2,7 @@
 
 #game-container {
   width: 980px;
-  height: 596px;
+  height: 576px;
   position: absolute;
   left: 50%;
   top: 50%;
@@ -382,10 +382,9 @@
   color: gold;
   font-size: 11px;
   width: 100%;
-  margin-top: 40%;
-  height: 50%;
-  align-items: center;
+  padding: 3px;
   justify-content: center;
+  border-radius: 4px;
   
 }
 
@@ -393,7 +392,7 @@
   margin-top: 0;
 }
 
-.location-level {
+.location-text {
   font-size: 10px;
 }
 
@@ -415,8 +414,8 @@
   z-index: 5;
   transition: transform 0.2s, border-color 0.2s;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  flex-direction: column;
 }
 
 .map-location:hover {
@@ -431,11 +430,11 @@
   cursor: not-allowed;
 }
 
-.location-icon,
+/* .location-icon,
 .location-name,
 .location-cost {
   display: none;
-}
+} */
 
 .location-info {
   position: absolute;
@@ -876,6 +875,15 @@
 }
 
 /* ================= BATTLE SELECTION ================= */
+.battle-info{
+  position: absolute;
+  color: red;
+  font-size: 24px;
+  background-color: black;
+  width: 100%;
+  text-align: center;
+}
+
 .battle-selection-content {
   flex: 1;
   display: flex;

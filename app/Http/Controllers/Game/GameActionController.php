@@ -88,7 +88,6 @@ final class GameActionController extends Controller
         return $this->respondWithSnapshot($request, $profiles, $gameState, $actionPoints, fn ($profile) => $gameState->buyPa(
             $profile,
             $request->integer('amount'),
-            $request->integer('price'),
         ));
     }
 
