@@ -38,8 +38,8 @@ enum ArenaDifficulty: string
     public function rarityBonus(): int
     {
         return match ($this) {
-            self::Easy => 0,
-            self::Medium => 5,
+            self::Easy => 5,
+            self::Medium => 10,
             self::Hard => 15,
         };
     }

@@ -26,23 +26,24 @@ final readonly class StaticGameCatalogRepository
                     $this->setNpc('ithan-npc-5', 'Ognisko', 'ogn_barb02.gif', 19, 7, 32, 32),
                 ],
                 'locations' => [
-                    $this->battle('ithan-yss', 'Dolina Yss', '009.jpg', 21.5, 2, 5, 4, 3, 6, 10, ['wolf', 'spider']),
-                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', '004.jpg', 11.5, 2.5, 3, 3, 1, 1, 5, ['goblin', 'rat']),
+                    $this->battle('ithan-yss', 'Dolina Yss', '009.jpg', 21.5, 2, 5, 4, 3, 6, 10, ['wolf', 'deer', 'fox']),
+                    $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', '004.jpg', 11.5, 2.5, 3, 3, 1, 1, 5, ['gaunt', 'rat', 'spider']),
                     $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, '026.jpg', 22, 11, 4, 4),
-                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '025.jpg', 6, 4.5, 4, 3, 2),
-                    $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, '025.jpg', 11, 9.5, 3, 3),
+                    $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '025.jpg', 6, 4.5, 4, 3),
+
                     $this->shop('ithan-shop', 'Sklep', '001.jpg', 2.5, 12.5, 3, 3, 'blacksmith_1'),
+                    $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, '025.jpg', 11, 9.5, 3, 3),
                     $this->buildLocation('ithan-world', 'Mapa Świata', LocationType::WorldMap, '', 11.5, 14.5, 3, 3),
                 ],
                 'enemies' => [
-                    'goblin' => $this->enemy('Gaunt', 'gaunt.gif', 15, 1, 3, 6, 0),
+                    'gaunt' => $this->enemy('Gaunt', 'gaunt.gif', 15, 1, 3, 6, 0),
                     'rat' => $this->enemy('Szczur', 'szczur.gif', 8, 1, 2, 4, 0),
                     'wolf' => $this->enemy('Wilk', 'wolf.gif', 25, 3, 6, 11, 0),
+                    'fox' => $this->enemy('Lis', 'lis.gif', 25, 3, 6, 11, 0),
+                    'deer' => $this->enemy('Jeleń', 'jelen2.gif', 25, 3, 6, 11, 0),
                     'spider' => $this->enemy('Pająk', 'spider.gif', 30, 4, 7, 14, 0),
                 ],
                 'eliteEnemies' => [
-                    'astratus' => $this->enemy('Astratus', 'astratus.gif', 100, 10, 30, 50, 50),
-                    'werecatTracker' => $this->enemy('Kotołak Tropiciel', 'kotolak.gif', 100, 10, 30, 50, 50),
                 ],
                 'elite2Enemies' => [],
                 'heroEnemies' => [
@@ -50,12 +51,7 @@ final readonly class StaticGameCatalogRepository
                     'billyTheDrunkard' => $this->enemy('Mietek Żul', 'zulek.gif', 30, 10, 30, 100, 5),
                     'wickedPatrick' => $this->enemy('Mroczny Patryk', 'mroczny-patryk3.gif', 300, 30, 100, 300, 666),
                     'spitefulGuide' => $this->enemy('Zły Przewodnik', 'mnich-zly-jacob.gif', 600, 50, 200, 400, 700),
-                ],
-                'arenaEnemies' => [
-                    ArenaDifficulty::Easy->value => ['goblin', 'rat'],
-                    ArenaDifficulty::Medium->value => ['wolf', 'spider'],
-                    ArenaDifficulty::Hard->value => ['spider', 'wolf'],
-                ],
+                ]
             ]),
             GameMap::Torneg->value => $this->buildMap(GameMap::Torneg, [
                 'npcs' => [
@@ -66,17 +62,18 @@ final readonly class StaticGameCatalogRepository
                     $this->setNpc('torneg-npc-5', 'Salome', 'npc108.gif', 1, 5.5, 32, 48),
                 ],
                 'locations' => [
-                    $this->battle('torneg-mountain-cave', 'Górska Grota', '005.jpg', 8, 1, 4, 2, 9, 11, 15, ['dark_wolf', 'pelzacz'], 2),
-                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków', '005.jpg', 23.5, 11.5, 3, 3, 12, 16, 20, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('torneg-mountain-cave', 'Górska Grota', '005.jpg', 8, 1, 4, 2, 9, 11, 15, ['dark_wolf', 'pelzacz', 'gaunt']),
+                    $this->battle('torneg-spider-nest', 'Gniazdo Pająków', '005.jpg', 23.5, 11.5, 3, 3, 12, 16, 20, ['giant_spider', 'spider_queen']),
                     $this->buildLocation('torneg-arena', 'Arena', LocationType::Arena, '030.jpg', 15, 1.5, 4, 3, 3, ['levelReq' => 9]),
-                    $this->shop('torneg-syntia', 'Sklep', '001.jpg', 19, 7, 4, 4, 'blacksmith_2'),
+                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '009.jpg', 1, 9, 2, 2),
+
+                    $this->shop('torneg-shop', 'Sklep', '001.jpg', 19, 7, 4, 4, 'blacksmith_2'),
                     $this->buildLocation('torneg-inn', 'Karczma Umbara', LocationType::Rest, '025.jpg', 20.5, 14.5, 3, 3),
-                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '009.jpg', 1, 9, 2, 2, 2),
-                    // $this->shop('torneg-salome', 'Salome', 8, 45, 'alchemist_2'),
                     $this->buildLocation('torneg-world', 'Mapa Świata', LocationType::WorldMap, '', 14.5, 15, 5, 2),
                 ],
                 'enemies' => [
                     'dark_wolf' => $this->enemy('Mroczny Wilk', 'dark_wolf.gif', 55, 8, 14, 28, 4),
+                    'gaunt' => $this->enemy('Gaunt', 'gaunt.gif', 15, 1, 3, 6, 0),
                     'pelzacz' => $this->enemy('Pełzacz', 'pelzacz.gif', 65, 9, 16, 32, 5),
                     'giant_spider' => $this->enemy('Olbrzymi Pająk', 'giant_spider.gif', 85, 13, 22, 48, 8),
                     'spider_queen' => $this->enemy('Królowa Pająków', 'spider_queen.gif', 110, 16, 27, 65, 12),
@@ -92,12 +89,7 @@ final readonly class StaticGameCatalogRepository
                     'harrietTheDomina' => $this->enemy('Domina Ecclesiae', 'domina-ecclesiae.gif', 150, 30, 70, 180, 100),
                     'billyTheDrunkard' => $this->enemy('Mietek Żul', 'zulek.gif', 30, 10, 30, 100, 5),
                     'wickedPatrick' => $this->enemy('Mroczny Patryk', 'mroczny-patryk3.gif', 300, 30, 100, 300, 666),
-                ],
-                'arenaEnemies' => [
-                    ArenaDifficulty::Easy->value => ['dark_wolf', 'pelzacz'],
-                    ArenaDifficulty::Medium->value => ['giant_spider', 'dark_wolf'],
-                    ArenaDifficulty::Hard->value => ['spider_queen', 'giant_spider'],
-                ],
+                ]
             ]),
             GameMap::KarkaHan->value => $this->buildMap(GameMap::KarkaHan, [
                 'npcs' => [
@@ -106,31 +98,33 @@ final readonly class StaticGameCatalogRepository
                     $this->setNpc('karka-han-npc-3', 'Lady Clarissa', 'aryst02.gif', 14, 8.5, 32, 48),
                     ],
                 'locations' => [
-                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja', '009.jpg', 8, 3.5, 4, 3, 20, 21, 25, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('karka-zulu-settlement', 'Osada Zulusów', '007.jpg', 1.5, 9.5, 3, 3, 24, 26, 30, ['giant_spider', 'spider_queen'], 2),
+                    $this->battle('karka-virgin-forest', 'Dziewicza Knieja', '009.jpg', 8, 3.5, 4, 3, 20, 21, 25, ['zubr', 'grzechotnik', 'parrot', 'lion'], 2),
+                    $this->battle('karka-zulu-settlement', 'Osada Zulusów', '007.jpg', 1.5, 9.5, 3, 3, 24, 26, 30, ['didaGula', 'fulaGula', 'zuluMulu', 'furuMulu'], 2),
                     $this->buildLocation('karka-arena', 'Arena', LocationType::Arena, '001.jpg', 16.5, 2.5, 5, 3, 3, ['levelReq' => 20]),
-                    $this->shop('karka-armorer', 'Sklep', '001.jpg', 21, 10, 4, 4, 'blacksmith_2'),
-                    $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, '025.jpg', 11, 9.5, 4, 3),
                     $this->buildLocation('karka-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '035.jpg', 4, 5, 2, 2, 2),
 
-                    // $this->shop('karka-craftsman', 'Rzemieślnik', 14, 30, 'alchemist_2'),
+                    $this->shop('karka-shop', 'Sklep', '001.jpg', 21, 10, 4, 4, 'blacksmith_2'),
+                    $this->buildLocation('karka-inn', 'Karczma', LocationType::Rest, '025.jpg', 11, 9.5, 4, 3),
                     $this->buildLocation('karka-world', 'Mapa Świata', LocationType::WorldMap, '', 11, 15, 4, 2),
                 ],
                 'enemies' => [
                     'zubr' => $this->enemy('Żubr', 'zubr.gif', 135, 21, 34, 92, 18),
                     'grzechotnik' => $this->enemy('Grzechotnik', 'grzechotnik.gif', 105, 24, 39, 96, 20),
+                    'parrot' => $this->enemy('Papuga', 'papuga.gif', 135, 21, 34, 92, 20),
+                    'lion' => $this->enemy('Lew', 'lew.gif', 135, 21, 50, 92, 30),
                     'giant_spider' => $this->enemy('Olbrzymi Pająk', 'giant_spider.gif', 150, 28, 44, 118, 26),
+                    
+                    'didaGula' => $this->enemy('Dida Gula', 'dzikus6.gif', 275, 40, 70, 100, 28),
+                    'fulaGula' => $this->enemy('Fula Gula', 'dzikus5.gif', 300, 20, 50, 100, 25),
+                    'zuluMulu' => $this->enemy('Zulu Mulu', 'dzikus2.gif', 200, 20, 50, 100, 27),
+                    'furuMulu' => $this->enemy('Furu Mulu', 'dzikus3.gif', 250, 30, 70, 120, 31),
                 ],
                 'eliteEnemies' => [
-                    'spider_queen' => $this->enemy('Królowa Pająków', 'spider_queen.gif', 185, 34, 52, 150, 35),
+                    'nunaFurla' => $this->enemy('Nuna Furla', 'dzikus8.gif', 450, 30, 70, 120, 28),
+                    'mulaFurla' => $this->enemy('Mula Furla', 'dzikus10.gif', 500, 30, 70, 120, 28),
                 ],
                 'elite2Enemies' => [],
-                'heroEnemies' => [],
-                'arenaEnemies' => [
-                    ArenaDifficulty::Easy->value => ['zubr', 'grzechotnik'],
-                    ArenaDifficulty::Medium->value => ['giant_spider', 'zubr'],
-                    ArenaDifficulty::Hard->value => ['spider_queen', 'giant_spider'],
-                ],
+                'heroEnemies' => []
             ]),
             GameMap::Werbin->value => $this->buildMap(GameMap::Werbin, [
                 'npcs' => [
@@ -142,35 +136,43 @@ final readonly class StaticGameCatalogRepository
                     
                 ],
                 'locations' => [
-                    $this->battle('werbin-heaths', 'Wrzosowiska', '010.jpg', 18.5, 1, 5, 2, 30, 31, 35, ['zubr', 'grzechotnik'], 2),
-                    $this->battle('werbin-goblin-forest', 'Las Goblinów', '009.jpg', 23.5, 10.5, 3, 3, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
-                    $this->battle('werbin-tristam', 'Tristam', '008.jpg', 1.5, 1.5, 3, 3, 35, 36, 40, ['giant_spider', 'spider_queen'], 2),
-                    
+                    $this->battle('werbin-mountains', 'Góry Zrębowe', '011.jpg', 23.5, 10.5, 3, 3, 35, 33, 37, ['basylisk', 'snake', 'tollokZibink', 'tollokSurbit', 'tollokBoger']),
+                    $this->battle('werbin-goblin-forest', 'Las Goblinów', '009.jpg', 18.5, 1, 5, 2, 30, 40, 48, ['badGoblin', 'goblinTraper', 'goblinMag', 'goblinTank']),
+                    $this->battle('werbin-wolf-area', 'Warczące Osuwiska', '009.jpg', 1.5, 1.5, 3, 3, 35, 51, 55, ['wolfLaw','wolfBond', 'wolfEye']),
                     $this->buildLocation('werbin-arena', 'Arena', LocationType::Arena, '001.jpg', 7.5, 2.5, 3, 3, 3, ['levelReq' => 35]),
-                    $this->shop('werbin-armorer', 'Sklep', '001.jpg', 10.5, 9.5, 3, 3, 'blacksmith_3'),
+                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '011.jpg', 24, 5, 2, 2),
+                    
+                    $this->shop('werbin-shop', 'Sklep', '001.jpg', 10.5, 9.5, 3, 3, 'blacksmith_3'),
                     $this->buildLocation('werbin-inn', 'Karczma', LocationType::Rest, '025.jpg', 17.5, 8.5, 3, 3),
-                    $this->buildLocation('torneg-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '011.jpg', 24, 5, 2, 2, 2),
-                    // $this->shop('werbin-craftsman', 'Rzemieślnik', 8.4, 10, 'alchemist_3'),
                     $this->buildLocation('werbin-world', 'Mapa Świata', LocationType::WorldMap, '', 9.5, 15, 5, 2),
                 ],
                 'enemies' => [
-                    'zubr' => $this->enemy('Żubr', 'zubr.gif', 220, 42, 66, 210, 48),
-                    'grzechotnik' => $this->enemy('Grzechotnik', 'grzechotnik.gif', 180, 48, 75, 225, 52),
-                    'giant_spider' => $this->enemy('Olbrzymi Pająk', 'giant_spider.gif', 260, 55, 88, 280, 70),
-                    'spider_queen' => $this->enemy('Królowa Pająków', 'spider_queen.gif', 330, 68, 105, 360, 90),
+                    'basylisk' => $this->enemy('Bazyliszek', 'bestia05.gif', 220, 42, 66, 210, 48),
+                    'snake' => $this->enemy('Wąż rzeczny', 'bestia132.gif', 240, 42, 70, 210, 48),
+                    'tollokZibink' => $this->enemy('Tollok Zibink', 'tollok01.gif', 260, 68, 75, 225, 52),
+                    'tollokSurbit' => $this->enemy('Tollok Surbit', 'tollok02.gif', 320, 48, 75, 225, 52),
+                    'tollokBoger' => $this->enemy('Tollok Boger', 'tollok03.gif', 200, 48, 65, 225, 52),
+
+                    'badGoblin' => $this->enemy('Zły goblin', 'gobrekrut.gif', 220, 42, 66, 210, 48),
+                    'goblinTraper' => $this->enemy('Goblin traper', 'gobtraper.gif', 180, 48, 75, 225, 52),
+                    'goblinMag' => $this->enemy('Władca krzewów', 'gobmag.gif', 260, 55, 88, 280, 70),
+                    'goblinTank' => $this->enemy('Pancerny goblin', 'gobbloker.gif', 330, 68, 105, 360, 90),
+
+                    'wolfLaw' => $this->enemy('Wilcze Prawo', 'wilk05.gif', 280, 80, 195, 360, 90),
+                    'wolfBond' => $this->enemy('Wilcza Więź', 'wilk03.gif', 430, 68, 105, 360, 90),
+                    'wolfEye' => $this->enemy('Oko Wilka', 'wilk04.gif', 330, 70, 165, 360, 90),
                 ],
-                'eliteEnemies' => [],
+                'eliteEnemies' => [
+                    'tollokShimger' => $this->enemy('Tollok Shimger', 'tollokboss.gif', 330, 68, 105, 360, 90),
+                    'wolfJaw' => $this->enemy('Wilcza Paszcza', 'dow.gif', 430, 68, 105, 360, 90),
+                ],
                 'elite2Enemies' => [
                     'riverLord' => $this->enemy('Władca rzek', 'wladca-rzek.gif', 1500, 20, 50, 750, 400),
+                    'tarmus' => $this->enemy('Tarmus Wuden', 'tarmus.gif', 3500, 30, 70, 1750, 600),
                 ],
                 'heroEnemies' => [
                     'crimsonAvenger' => $this->enemy('Karmazynowy mściciel', 'gnom-msciciel2.gif', 2500, 20, 50, 1500, 650),
-                ],
-                'arenaEnemies' => [
-                    ArenaDifficulty::Easy->value => ['zubr', 'grzechotnik'],
-                    ArenaDifficulty::Medium->value => ['giant_spider', 'zubr'],
-                    ArenaDifficulty::Hard->value => ['spider_queen', 'giant_spider'],
-                ],
+                ]
             ]),
         ];
     }
@@ -369,8 +371,8 @@ final readonly class StaticGameCatalogRepository
             'hp' => (int) floor($enemy['baseHp'] * $multiplier),
             'dmgMin' => (int) floor($enemy['dmgMin'] * $multiplier),
             'dmgMax' => (int) floor($enemy['dmgMax'] * $multiplier),
-            'exp' => (int) floor($enemy['exp'] * $multiplier),
-            'gold' => (int) floor($enemy['gold'] * $multiplier),
+            'exp' => (int) floor($enemy['exp']),
+            'gold' => (int) floor($enemy['gold']),
         ];
     }
 

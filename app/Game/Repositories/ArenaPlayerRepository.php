@@ -49,9 +49,9 @@ final readonly class ArenaPlayerRepository
     private function levelRangeForDifficulty(int $level, ArenaDifficulty $difficulty): array
     {
         return match ($difficulty) {
-            ArenaDifficulty::Easy => [$level - 25, $level + 25],
+            ArenaDifficulty::Easy => [1, $level + 25],
             ArenaDifficulty::Medium => [$level - 10, $level + 10],
-            ArenaDifficulty::Hard => [$level, $level + 25],
+            ArenaDifficulty::Hard => [$level, 300],
             default => [$level - 25, $level + 25],
         };
     }
