@@ -6,6 +6,7 @@ use App\Game\Enums\ArenaDifficulty;
 use App\Game\Enums\ItemRarity;
 use App\Game\Enums\LocationType;
 use App\Game\Repositories\StaticGameCatalogRepository;
+use App\Game\Repositories\ArenaPlayerRepository;
 use App\Models\GameProfile;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -14,11 +15,13 @@ final readonly class BattleService
 {
     public function __construct(
         private StaticGameCatalogRepository $catalog,
+        private ArenaPlayerRepository $opponents,
         private GameProfileService $profiles,
         private GameStateService $gameState,
         private ItemFactory $items,
         private InventoryService $inventory,
     ) {}
+
 
     /**
      * @return array<string, mixed>
@@ -44,7 +47,7 @@ final readonly class BattleService
                 throw new DomainException('Ten etap nie jest jeszcze odblokowany.');
             }
 
-            $this->spendPa($profile, (int) ($location['pa'] ?? 1));
+            $this->spendPa($profile, 1);// (int) ($location['pa'] ?? 1));
 
             $stageData = collect($this->catalog->stagesForLocation($location, $unlockedStage))
                 ->first(fn (array $candidate): bool => $candidate['stage'] === $stage);
@@ -64,32 +67,44 @@ final readonly class BattleService
     /**
      * @return array<string, mixed>
      */
-    public function fightArena(GameProfile $profile, ArenaDifficulty $difficulty): array
+    public function fightArena(GameProfile $currentProfile, ArenaDifficulty $difficulty): array
     {
-        return DB::transaction(function () use ($profile, $difficulty): array {
-            $profile->refresh();
-            $map = $this->catalog->map($profile->current_map_id);
+        return DB::transaction(function () use ($currentProfile, $difficulty): array {
+
+            $enemyProfile = $this->opponents->randomPlayer($currentProfile, $difficulty);
+            
+
+            $enemy = $enemyProfile ? [
+                'name'        => $enemyProfile->user?->name ?? 'Nieznany',
+                'level'       => $enemyProfile->level,
+                'hp'          => $enemyProfile->hp,
+                'dmgMin'      => $enemyProfile->dmg_min,
+                'dmgMax'      => $enemyProfile->dmg_max,
+                'armor'       => $enemyProfile->armor,
+                'critChance'  => $enemyProfile->crit_chance,
+                'critPower'   => $enemyProfile->crit_power,
+                'dodge'       => $enemyProfile->dodge,
+                'stun'        => $enemyProfile->stun,
+                'exp'         => $enemyProfile->level,
+                'gold'        => floor($enemyProfile->gold / $enemyProfile->level),
+            ] : null;
+
+            if($enemy == null)  throw new DomainException('Brak przeciwnika');
+            
+            $currentProfile->refresh();
+
             $cost = match ($difficulty) {
                 ArenaDifficulty::Easy => 1,
                 ArenaDifficulty::Medium => 2,
                 ArenaDifficulty::Hard => 3,
             };
 
-            $this->spendPa($profile, $cost);
+            $this->spendPa($currentProfile, $cost);
 
-            $enemyKeys = $map['arenaEnemies'][$difficulty->value] ?? [];
-
-            if ($enemyKeys === []) {
-                throw new DomainException('Arena na tej mapie jest niedostępna.');
-            }
-
-            $enemyKey = $enemyKeys[array_rand($enemyKeys)];
-            $level = $map['levelRange']['min'] + $difficulty->levelBonus();
-            $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level, 'enemies');
-            $result = $this->runAutoBattle($profile, $enemy, "Arena - {$difficulty->label()} Walka", $difficulty);
+            $result = $this->runAutoBattle($currentProfile, $enemy, "Walka PvP", $difficulty);
 
             if ($result['won']) {
-                $this->applyVictory($profile, $enemy, $result, $difficulty);
+                $this->applyVictory($currentProfile, $enemy, $result, $difficulty);
             }
 
             return $result;
@@ -112,6 +127,7 @@ final readonly class BattleService
 
             $this->spendPa($profile, (int) ($location['pa'] ?? 1));
 
+            $battleHeader = 'silnym przeciwnikiem';
             $enemyTag = 'none';
             $difficulty = ArenaDifficulty::Easy;
             switch ($enemyType) {
@@ -119,16 +135,19 @@ final readonly class BattleService
                     $enemyTag = 'eliteEnemies';
                     $level = $map['levelRange']['min'];
                     $difficulty = ArenaDifficulty::Easy;
+                    $battleHeader = 'elitą';
                     break;
                 case 'elite2':
                     $enemyTag = 'elite2Enemies';
                     $level = $map['levelRange']['min'] + 5;
                     $difficulty = ArenaDifficulty::Medium;
+                    $battleHeader = 'elitą 2';
                     break;
                 case 'hero':
                     $enemyTag = 'heroEnemies';
                     $level = $map['levelRange']['max'];
                     $difficulty = ArenaDifficulty::Hard;
+                    $battleHeader = 'herosem';
                     break;
             }
             $enemyKeys = array_keys($map[$enemyTag]);
@@ -137,7 +156,7 @@ final readonly class BattleService
             }
             $enemyKey = $enemyKeys[array_rand($enemyKeys)];
             $enemy = $this->catalog->scaledEnemy($map['id'], $enemyKey, $level, $enemyTag);
-            $result = $this->runAutoBattle($profile, $enemy, 'Walka z silnym przeciwnikiem');
+            $result = $this->runAutoBattle($profile, $enemy, "Walka z {$battleHeader}");
 
             if ($result['won']) {
                 $this->applyVictory($profile, $enemy, $result, $difficulty);
@@ -224,9 +243,8 @@ final readonly class BattleService
      */
     private function result(string $name, array $enemy, bool $won, int $playerHp, int $enemyHp, array $log, ?ArenaDifficulty $arenaDifficulty): array
     {
-        if (! $won) {
-            $log[] = ['type' => 'defeat'];
-        }
+        if ($won) $log[] = ['type' => 'victory'];
+        else $log[] = ['type' => 'defeat'];
 
         return [
             'name' => $name,

@@ -10,6 +10,7 @@ final readonly class PlayerRankingEntry
         public int $userId,
         public string $nick,
         public int $level,
+
         public bool $currentUser = false,
     ) {}
 }

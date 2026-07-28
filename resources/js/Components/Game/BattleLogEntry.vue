@@ -46,13 +46,14 @@ const icon = computed(() => {
 
             <template v-else-if="log.type === 'attack' && log.actor === 'player'">
                 <b class="player-attack">Zadałeś</b> przeciwnikowi {{ log.damage }} obrażeń.
+                <br/>
                 <b class="enemy-attack">{{ log.targetName }}</b> otrzymał {{ log.damage }} obrażeń,
                 {{ log.remainingHp }} PŻ pozostało.<template v-if="log.critical"> KRYTYK!</template>
             </template>
 
             <template v-else-if="log.type === 'attack' && log.actor === 'enemy'">
                 <b class="enemy-attack">{{ log.actorName }}</b> uderzył z siłą {{ log.attackPower }} obrażeń.
-                Obecny pancerz: {{ log.armor }}.
+                <br/>
                 <b class="player-attack">Otrzymałeś</b> {{ log.damage }} obrażeń,
                 {{ log.remainingHp }} PŻ pozostało.
             </template>
@@ -76,9 +77,11 @@ const icon = computed(() => {
             <template v-else-if="log.type === 'drop'">
                 Zdobyto: {{ log.itemName }}!
             </template>
-
+            <template v-else-if="log.type === 'victory'">
+                Walka wygrana!
+            </template>
             <template v-else-if="log.type === 'defeat'">
-                Zostałeś pokonany!
+                Walka przegrana!
             </template>
         </span>
     </div>

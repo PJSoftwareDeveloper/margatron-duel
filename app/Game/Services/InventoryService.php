@@ -119,11 +119,32 @@ final readonly class InventoryService
         return $this->profiles->recalculate($profile);
     }
 
+    public function sellNonValuable(GameProfile $profile): array {
+        $inventory = $this->normalizedInventory($profile);
+        for ($i = 0; $i < 15; $i++) {
+            $item = $inventory[$i] ?? null;
+            if($item == null) continue;
+            if($item['type'] == 'potion') continue;
+            if($item['rarity'] == 'common' || $item['rarity'] == 'unique'){
+                $gold = (int) floor(($item['price'] ?? 0) * 0.5);
+                $inventory[$i] = null;
+                $profile->forceFill([
+                    'inventory' => $inventory,
+                    'gold' => $profile->gold + $gold,
+                ])->save();
+            }
+        }
+        return [
+            'profile' => $profile->refresh(),
+        ];
+    }
+
     /**
      * @return array{profile: GameProfile, gold: int}
      */
     public function sell(GameProfile $profile, int $index): array
     {
+        
         $inventory = $this->normalizedInventory($profile);
         $item = $inventory[$index] ?? null;
 

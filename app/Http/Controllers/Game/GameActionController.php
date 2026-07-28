@@ -116,6 +116,14 @@ final class GameActionController extends Controller
         ));
     }
 
+    public function sellNonValuable(InventorySlotRequest $request, GameProfileService $profiles, GameStateService $gameState, ActionPointRegenerationScheduler $actionPoints, InventoryService $inventory): JsonResponse
+    {
+        return $this->respondWithSnapshot($request, $profiles, $gameState, $actionPoints, fn ($profile) => $inventory->sellNonValuable(
+            $profile,
+            $request
+        )['profile']);
+    }
+
     public function sell(InventorySlotRequest $request, GameProfileService $profiles, GameStateService $gameState, ActionPointRegenerationScheduler $actionPoints, InventoryService $inventory): JsonResponse
     {
         return $this->respondWithSnapshot($request, $profiles, $gameState, $actionPoints, fn ($profile) => $inventory->sell(

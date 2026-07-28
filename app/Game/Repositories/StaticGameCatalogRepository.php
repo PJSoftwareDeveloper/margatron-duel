@@ -28,7 +28,7 @@ final readonly class StaticGameCatalogRepository
                 'locations' => [
                     $this->battle('ithan-yss', 'Dolina Yss', '009.jpg', 21.5, 2, 5, 4, 3, 6, 10, ['wolf', 'spider']),
                     $this->battle('ithan-hunters-cave', 'Jaskinia Łowców', '004.jpg', 11.5, 2.5, 3, 3, 1, 1, 5, ['goblin', 'rat']),
-                    $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, '001.jpg', 22, 11, 4, 4),
+                    $this->buildLocation('ithan-arena', 'Arena', LocationType::Arena, '026.jpg', 22, 11, 4, 4),
                     $this->buildLocation('ithan-tough', 'Mocny przeciwnik', LocationType::ToughEnemy, '025.jpg', 6, 4.5, 4, 3, 2),
                     $this->buildLocation('ithan-inn', 'Karczma pod Rozbrykanym Niziołkiem', LocationType::Rest, '025.jpg', 11, 9.5, 3, 3),
                     $this->shop('ithan-shop', 'Sklep', '001.jpg', 2.5, 12.5, 3, 3, 'blacksmith_1'),

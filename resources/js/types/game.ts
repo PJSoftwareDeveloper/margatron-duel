@@ -124,6 +124,9 @@ export type Location = {
     levelMax?: number;
     shopId?: string;
     enemies?: string[];
+    eliteEnemies?: string[];
+    elite2Enemies?: string[];
+    heroEnemies?: string[];
     stages?: Stage[];
     unlockedStage?: number;
     icon?: string;
@@ -251,6 +254,9 @@ export type BattleLog =
         type: 'drop';
         itemName: string;
         color: string;
+    }
+    | {
+        type: 'victory';
     }
     | {
         type: 'defeat';

@@ -11,14 +11,22 @@ import type { ActionPointsChangedEvent, ActionPointState, BattleResult, Equipmen
 
 
 type Resource<T> = T | { data: T };
-type GameView = 'map' | 'battleSelection' | 'arena' | 'toughenemy' | 'battle' | 'shop' | 'rest' | 'worldMap';
+type GameView = 'map' | 'battleSelection' | 'arena' | 'toughenemy' | 'battle' | 'battleArena' | 'shop' | 'rest' | 'worldMap';
+type WindowType = 'none' | 'battleSelection' | 'shop';
+
+type ViewType = 'classic' | 'modern';
+
 
 const props = defineProps<{
     game: Resource<GameSnapshot>;
 }>();
 
 const game = ref(unwrap(props.game));
+const viewVersion = ref<ViewType>('modern');
 const currentView = ref<GameView>('map');
+const currentWindow = ref<WindowType>('none');
+const locationMessage = ref<true | false>(false);
+
 const selectedLocation = ref<Location | null>(null);
 const selectedBattleLocation = ref<Location | null>(null);
 const lastBattleStage = ref<number | null>(null);
@@ -328,23 +336,22 @@ function enterLocation(location: Location): void {
     }
 
     selectedLocation.value = location;
+    confirmEnterLocation();
 }
 
-function canEnterLocation(location: Location | null): boolean {
-    if (!location || location.locked) {
-        return false;
-    }
 
-    if ((location.paCost ?? 0) > 0 && user.value.pa < (location.paCost ?? 0)) {
-        return false;
+function canToughFight(rarity: string): boolean {
+    switch(rarity){
+        case 'elite':
+            return Object.values(currentMap.value['eliteEnemies']).length > 0;
+        case 'elite2':
+            return Object.values(currentMap.value['elite2Enemies']).length > 0;
+        case 'hero':
+            return Object.values(currentMap.value['heroEnemies']).length > 0;
     }
-
-    if (location.levelReq && user.value.level < location.levelReq) {
-        return false;
-    }
-
-    return true;
+    return false;
 }
+
 
 function getEnterButtonText(location: Location): string {
     if (location.locked) return 'Zablokowane';
@@ -363,18 +370,19 @@ function getEnterButtonText(location: Location): string {
 
 function confirmEnterLocation(): void {
     const location = selectedLocation.value;
+    locationMessage.value = false;
 
-    if (!location || !canEnterLocation(location)) {
+    if (!location) {
         return;
     }
 
     if (location.type === 'battle') {
         selectedBattleLocation.value = location;
-        currentView.value = 'battleSelection';
+        currentWindow.value = 'battleSelection';
     } else if (location.type === 'shop') {
         currentShopId.value = location.shopId ?? null;
         shopTab.value = 'buy';
-        currentView.value = 'shop';
+        currentWindow.value = 'shop';
     } else if (location.type === 'rest') {
         currentView.value = 'rest';
     } else if (location.type === 'worldmap') {
@@ -389,6 +397,7 @@ function confirmEnterLocation(): void {
 
 function goBackToMap(): void {
     currentView.value = 'map';
+    currentWindow.value = 'none';
     selectedLocation.value = null;
 }
 
@@ -408,6 +417,7 @@ async function selectBattleStage(stage: Stage & { id?: number; locked?: boolean 
     }
     if (stageCount == null) stageCount = 10;
     lastBattleStage.value = stage.stage;
+    currentWindow.value = 'none';
 
     
 
@@ -451,12 +461,16 @@ async function startToughFight(enemyType: 'elite' | 'elite2' | 'hero'): Promise<
 }
 
 async function startArenaFight(difficulty: 'easy' | 'medium' | 'hard'): Promise<void> {
-    lastBattleStage.value = null;
-    const response = await axios.post('/game/actions/battle/arena', { difficulty });
-    battleResult.value = response.data.battle;
-    syncGame(response.data.game);
-    currentView.value = 'battle';
-    await scrollLog();
+    try{
+        lastBattleStage.value = null;
+        const response = await axios.post('/game/actions/battle/arena', { difficulty });
+        battleResult.value = response.data.battle;
+        syncGame(response.data.game);
+        currentView.value = 'battleArena';
+        await scrollLog();
+    } catch (error) {
+        showActionError(error);
+    }
 }
 
 async function startNextBattle(): Promise<void> {
@@ -493,6 +507,12 @@ async function action(url: string, data: Record<string, unknown> = {}): Promise<
     }
 }
 
+async function closeShop(): Promise<void> {
+    currentView.value = 'map';
+    selectedLocation.value = null;
+    currentWindow.value = 'none';
+}
+
 async function buyItem(item: Item): Promise<void> {
     if (!currentShopId.value || user.value.gold < item.price || (item.level ?? 1) > user.value.level) {
         return;
@@ -502,6 +522,11 @@ async function buyItem(item: Item): Promise<void> {
         shopId: currentShopId.value,
         itemId: item.shopItemId ?? item.id,
     });
+}
+
+async function sellNonValuableItems(): Promise<void> {
+    var index = 1;
+    await action('/game/actions/inventory/sellNonValuable', { index });
 }
 
 async function sellItem(index: number): Promise<void> {
@@ -575,7 +600,9 @@ function showItemInfo(item: Item | null | undefined): void {
 }
 
 function showItemMenu(index: number): void {
-    void sellItem(index);
+    if (currentWindow.value == 'shop' || currentView.value == 'shop'){
+        void sellItem(index);
+    }
 }
 
 function disposeGameView(): void {
@@ -609,6 +636,7 @@ onUnmounted(disposeGameView);
 
 function showActionError(error: unknown): void {
     const axiosError = error as AxiosError<{ message?: string }>;
+    console.log(axiosError);
     alertMessage.value = axiosError.response?.data?.message ?? 'Akcja nie powiodła się.';
 }
 
@@ -672,112 +700,69 @@ async function scrollLog(): Promise<void> {
                             </div>
                         </div>
                     </div>
-
-                    <div v-if="selectedLocation" class="location-info">
-                        <h3>{{ selectedLocation.name }}</h3>
-                        <p>{{ selectedLocation.description }}</p>
-                        <div class="location-details">
-                            <span v-if="selectedLocation.paCost">Koszt: {{ selectedLocation.paCost }} PA</span>
-                            <span v-if="selectedLocation.levelReq">Wymagany poziom: {{ selectedLocation.levelReq }}</span>
-                            <span v-if="selectedLocation.levelMin !== undefined && selectedLocation.levelMax !== undefined">
-                                Poziom przeciwników: {{ selectedLocation.levelMin }}-{{ selectedLocation.levelMax }}
-                            </span>
-                        </div>
-                        <button class="btn-enter" :disabled="!canEnterLocation(selectedLocation)" @click="confirmEnterLocation">
-                            {{ getEnterButtonText(selectedLocation) }}
-                        </button>
-                    </div>
                 </div>
-
-                <div v-else-if="currentView === 'battleSelection'" class="inline-view battle-selection-inline">
-                    <div class="inline-header">{{ selectedBattleLocation?.name || 'Wybór Walki' }}</div>
-                    <div class="battle-selection-content">
-                        <div
-                            v-for="stage in battleStages"
-                            :key="stage.stage"
-                            class="battle-stage-card"
-                            :class="{ locked: stage.locked }"
-                            @click="selectBattleStage(stage)"
-                        >
-                            <div class="stage-background" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionX: -(87 * (stage.stage-1)) + `px` }"></div>
-                            <div class="stage-content">
-                                <span class="stage-number">{{ stage.stage }}</span>
-                                <span class="stage-label">Etap {{ stage.stage }}</span>
-                                <span class="stage-level">Poziom {{ stage.level }}</span>
-                                <span v-if="stage.locked" class="stage-lock">🔒</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="inline-footer">
-                        <button class="btn-back" @click="goBackToMap">← Powrót do mapy</button>
-                    </div>
-                </div>
-                <div v-else-if="currentView === 'toughenemy'" class="inline-view arena-inline">
-                    <div class="inline-header">Mocny przeciwnik</div>
-                    <div class="arena-main-layout">
-                        <div class="arena-left-panel">
-                            <div class="arena-info-text">
+                <div v-else-if="currentView === 'toughenemy'" class="inline-view battle-inline">
+                    <div class="battle-main-layout">
+                        <div class="battle-left-panel">
+                            <div class="battle-info-text">
                                 <h3>Witaj!</h3>
                                 <p>Tutaj możesz zmierzyć się z silnym przeciwnikiem.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
-                            <div class="arena-buttons-container">
-                                <button class="arena-difficulty-btn easy" @click="startToughFight('elite')">
+                        <div class="battle-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
+                            <div class="inline-header">Mocny przeciwnik</div>
+                            <div class="battle-buttons-container">
+                                <button class="battle-difficulty-btn easy" :disabled="!canToughFight('elite')" @click="startToughFight('elite')">
                                     <span class="difficulty-name">Walka z elitą</span>
                                     <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min }}</span>
                                 </button>
-                                <button class="arena-difficulty-btn medium" @click="startToughFight('elite2')">
+                                <button class="battle-difficulty-btn medium" :disabled="!canToughFight('elite2')" @click="startToughFight('elite2')">
                                     <span class="difficulty-name">Walka z elitą 2</span>
                                     <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min + 5}}</span>
                                 </button>
-                                <button class="arena-difficulty-btn hard" @click="startToughFight('hero')">
+                                <button class="battle-difficulty-btn hard" :disabled="!canToughFight('hero')" @click="startToughFight('hero')">
                                     <span class="difficulty-name">Walka z herosem</span>
                                     <span class="difficulty-desc">Poziom {{ currentMap.levelRange.max }}</span>
                                 </button>
                             </div>
+                            <div class="inline-footer">
+                                <button class="btn-back" @click="goBackToMap">Wyjdź</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="inline-footer">
-                        <button class="btn-back" @click="goBackToMap">← Wyjdź</button>
                     </div>
                 </div>
-                <div v-else-if="currentView === 'arena'" class="inline-view arena-inline">
-                    <div class="inline-header">Arena</div>
-                    <div class="arena-main-layout">
-                        <div class="arena-left-panel">
-                            <div class="arena-info-text">
+                <div v-else-if="currentView === 'arena'" class="inline-view battle-inline">
+                    <div class="battle-main-layout">
+                        <div class="battle-left-panel">
+                            <div class="battle-info-text">
                                 <h3>Witaj na Arenie!</h3>
                                 <p>Tutaj możesz zmierzyć się z losowymi przeciwnikami o różnej sile.</p>
-                                <p class="arena-tip">Im trudniejsza walka, tym większa szansa na lepszą nagrodę.</p>
+                                <p class="battle-tip">Im trudniejsza walka, tym większa szansa na lepszą nagrodę.</p>
                             </div>
                         </div>
-                        <div class="arena-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
-                            <div class="arena-buttons-container">
-                                <button class="arena-difficulty-btn easy" @click="startArenaFight('easy')">
+                        <div class="battle-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
+                            <div class="inline-header">Arena</div>
+                            <div class="battle-buttons-container">
+                                <button class="battle-difficulty-btn easy" @click="startArenaFight('easy')">
                                     <span class="difficulty-name">Łatwa walka</span>
-                                    <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min }}</span>
                                 </button>
-                                <button class="arena-difficulty-btn medium" @click="startArenaFight('medium')">
+                                <button class="battle-difficulty-btn medium" @click="startArenaFight('medium')">
                                     <span class="difficulty-name">Średnia walka</span>
-                                    <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min + 3 }}</span>
                                 </button>
-                                <button class="arena-difficulty-btn hard" @click="startArenaFight('hard')">
+                                <button class="battle-difficulty-btn hard" @click="startArenaFight('hard')">
                                     <span class="difficulty-name">Trudna walka</span>
-                                    <span class="difficulty-desc">Poziom {{ currentMap.levelRange.min + 6 }}</span>
                                 </button>
                             </div>
+                            <div class="inline-footer">
+                                <button class="btn-back" @click="goBackToMap">Wyjdź z areny</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="inline-footer">
-                        <button class="btn-back" @click="goBackToMap">← Wyjdź z areny</button>
                     </div>
                 </div>
 
-                <div v-else-if="currentView === 'battle'" class="inline-view battle-inline">
-                    <div class="inline-header">{{ battleResult?.name }}</div>
+                <div v-else-if="currentView === 'battle' || currentView === 'battleArena'" class="inline-view battle-inline">
                     <div class="battle-main-layout">
-                        <div class="battle-log-container">
+                        <div class="battle-log-container ">
                             <div ref="logScroll" class="battle-log-scroll">
                                 <BattleLogEntry
                                     v-for="(log, i) in battleResult?.log ?? []"
@@ -786,14 +771,30 @@ async function scrollLog(): Promise<void> {
                                 />
                             </div>
                         </div>
+                        <div class="battle-right-panel" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`}">
+                            <div class="inline-header">{{ battleResult?.name }}</div>
 
-                        <div class="battle-visuals" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
-                            
-                            <div v-if="stageCount != null && stageCount <= 0" class="battle-info">Wyprawa zakończona</div>
-                            <div v-else class="enemy-container">
-                                <img v-if="battleResult?.enemy.imageUrl" :src="battleResult.enemy.imageUrl" :alt="battleResult.enemy.name" class="enemy-image-pixel">
+                            <div v-if="currentView === 'battleArena'" class="battle-content">
+                                <div class="battle-buttons-container">
+                                    <button class="battle-difficulty-btn easy" @click="startArenaFight('easy')">
+                                        <span class="difficulty-name">Łatwa walka</span>
+                                    </button>
+                                    <button class="battle-difficulty-btn medium" @click="startArenaFight('medium')">
+                                        <span class="difficulty-name">Średnia walka</span>
+                                    </button>
+                                    <button class="battle-difficulty-btn hard" @click="startArenaFight('hard')">
+                                        <span class="difficulty-name">Trudna walka</span>
+                                    </button>
+                                </div>
                             </div>
+                            <div v-else-if="currentView === 'battle'" class="battle-content" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})` }">
+                                <div v-if="stageCount != null && stageCount <= 0" class="battle-info">Wyprawa zakończona</div>
+                                    
+                                <div v-else class="enemy-container">
+                                    <img v-if="battleResult?.enemy.imageUrl" :src="battleResult.enemy.imageUrl" :alt="battleResult.enemy.name" class="enemy-image-pixel">
+                                </div>
 
+                            </div>
                             <div v-if="battleResult?.rewards.drop" class="battle-drop">
                                 <div class="drop-item" :class="battleResult.rewards.drop.rarityCss">
                                     <img :src="getItemImage(battleResult.rewards.drop)" :alt="battleResult.rewards.drop.name" class="drop-image">
@@ -801,71 +802,36 @@ async function scrollLog(): Promise<void> {
                                     <span class="drop-name" :style="{ color: battleResult.rewards.drop.rarityColor }">{{ battleResult.rewards.drop.name }}</span>
                                 </div>
                             </div>
-
-                            <div class="battle-footer">
-                                <div v-if="battleResult" class="battle-end-message">
-                                    <span v-if="battleResult.won" class="win">Walka wygrana!</span>
-                                    <span v-else class="lose">Walka przegrana</span>
-                                </div>
-                                <div class="battle-buttons">
-                                    <button v-if="canContinueBattle && stageCount != null && stageCount > 0" class="btn-battle-action btn-next" @click="startNextBattle">Idź dalej ➜</button>
-                                    <button class="btn-battle-action" @click="closeBattle">Wróć do mapy</button>
-                                </div>
+                            <div class="inline-footer">
+                                <button v-if="canContinueBattle && stageCount != null && stageCount > 0" class="btn-back" @click="startNextBattle">Idź dalej ➜</button>
+                                <button class="btn-back" @click="closeBattle">Wróć do mapy</button>
+                            
                             </div>
                         </div>
+                    
                     </div>
                 </div>
 
-                <div v-else-if="currentView === 'shop'" class="inline-view shop-inline">
-                    <div class="inline-header">{{ shopName }}</div>
-                    <div class="shop-main-content" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionY: (60)+`%`, backgroundSize: `100%` }">
-                        <div class="shop-tabs">
-                            <button :class="{ active: shopTab === 'buy' }" @click="shopTab = 'buy'">Kup</button>
-                            <button :class="{ active: shopTab === 'sell' }" @click="shopTab = 'sell'">Sprzedaj</button>
+                <!-- <div v-else-if="currentWindow === 'shop' && viewVersion === 'classic'" class="gray-transparent">
+                    <div class="shop-window" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`}">
+                        <h3 class="shop-header">Sklep</h3>
+                        <div class="shop-buttons-container">
+                            <button class="shop-option" @click="sellNonValuableItems()">
+                                <span>Sprzedaj wszystkie śmieci</span>
+                            </button>
+                            <button class="shop-option" @click="buyPA(paOffers[1].amount)">
+                                <span>Kup {{ paOffers[1].amount }} PA za <span :style="{ fontWeight: `bold`}">{{ paOffers[1].price }}</span> złota</span>
+                            </button>
+                            <button class="shop-option" @click="closeShop()">
+                                <span>Wyjdź ze sklepu</span>
+                            </button>
                         </div>
-
-                        <div v-if="shopTab === 'buy'" class="shop-items-list">
-                            <div
-                                v-for="item in shopItems"
-                                :key="item.id"
-                                class="shop-row"
-                                :class="{ 'cant-afford': user.gold < item.price, 'cant-use': (item.level ?? 1) > user.level }"
-                                @click="buyItem(item)"
-                                @mouseenter="showTooltip(item, $event)"
-                                @mouseleave="hideTooltip"
-                            >
-                                <img :src="getItemImage(item)" :alt="item.name" class="shop-item-image">
-                                <span class="item-name" :class="item.rarityCss" :style="{ color: item.rarityColor }">{{ item.name }}</span>
-                                <span v-if="(item.level ?? 1) > 1" class="item-level">Poz. {{ item.level }}</span>
-                                <span class="item-price" :class="{ 'no-gold': user.gold < item.price }">💰 {{ item.price }}</span>
-                            </div>
-                        </div>
-
-                        <div v-if="shopTab === 'sell'" class="shop-items-list">
-                            <div
-                                v-for="item in inventoryFiltered"
-                                :key="item.id"
-                                class="shop-row"
-                                @click="sellItem(inventory.indexOf(item))"
-                                @mouseenter="showTooltip(item, $event)"
-                                @mouseleave="hideTooltip"
-                            >
-                                <img :src="getItemImage(item)" :alt="item.name" class="shop-item-image">
-                                <span class="item-name" :class="item.rarityCss" :style="{ color: item.rarityColor }">{{ item.name }}</span>
-                                <span v-if="(item.quantity ?? 1) > 1" class="item-qty">x{{ item.quantity }}</span>
-                                <span class="item-price sell-price">💰 {{ Math.floor(item.price * 0.5) }}</span>
-                            </div>
-                            <div v-if="inventoryFiltered.length === 0" class="empty-message">Plecak jest pusty</div>
-                        </div>
-
-                        <div class="shop-gold-bar">
-                            Twoje złoto: <span class="gold-amount">{{ formatNumber(user.gold) }}</span>
+                        <div class="shop-text">
+                            <span>Kliknij przedmiot w plecaku, aby go sprzedać</span>
                         </div>
                     </div>
-                    <div class="inline-footer">
-                        <button class="btn-back" @click="goBackToMap">← Wyjdź ze sklepu</button>
-                    </div>
-                </div>
+                </div> -->
+                
 
                 <div v-else-if="currentView === 'rest'" class="inline-view rest-inline">
                     <div class="inline-header">Odpoczynek</div>
@@ -916,7 +882,7 @@ async function scrollLog(): Promise<void> {
                         </div>
                     </div>
                     <div class="inline-footer">
-                        <button class="btn-back" @click="goBackToMap">← Powrót</button>
+                        <button class="btn-back" @click="goBackToMap">Powrót</button>
                     </div>
                 </div>
 
@@ -936,7 +902,47 @@ async function scrollLog(): Promise<void> {
                         </div>
                     </div>
                     <div class="inline-footer">
-                        <button class="btn-back" @click="goBackToMap">← Powrót</button>
+                        <button class="btn-back" @click="goBackToMap">Powrót</button>
+                    </div>
+                </div>
+                <div v-if="currentWindow === 'battleSelection'" class="inline-view" >
+                    <div class="inline-header">{{ selectedBattleLocation?.name || 'Wybór Walki' }}</div>
+                    <div class="battle-selection-window">
+                        <div class="battle-selection-content">
+                            <div
+                                v-for="stage in battleStages"
+                                :key="stage.stage"
+                                class="battle-stage-card"
+                                :class="{ locked: stage.locked }"
+                                @click="selectBattleStage(stage)"
+                            >
+                                <div class="stage-background" :style="{ backgroundImage: `url(${selectedLocation?.imageUrl})`, backgroundPositionX: -(100.4 * (stage.stage-1)) + `px` }"></div>
+                                <div class="stage-content">
+                                    <span class="stage-label">Etap {{ stage.stage }}:</span>
+                                    <span class="stage-label">Poziom {{ stage.level }}</span>
+                                    <span v-if="stage.locked" class="stage-lock">🔒</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="inline-footer">
+                        <button class="btn-back" @click="goBackToMap">Powrót do mapy</button>
+                    </div>
+                </div>
+                <div v-if="currentWindow === 'shop'" class="inline-view">
+                    <div class="inline-header">{{ shopName }}</div>
+                    <div class="shop-main-content" :style="{ background: `no-repeat center url(${selectedLocation?.imageUrl})`  }">
+                        <div class="shop-buttons-container">
+                            <button class="shop-button" @click="sellNonValuableItems()">
+                                <span>Sprzedaj wszystkie śmieci</span>
+                            </button>
+                            <button class="shop-button" @click="buyPA(paOffers[1].amount)">
+                                <span>Kup {{ paOffers[1].amount }} PA za <span :style="{ fontWeight: `bold`}">{{ paOffers[1].price }}</span> złota</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="inline-footer">
+                        <button class="btn-back" @click="goBackToMap">Wyjdź ze sklepu</button>
                     </div>
                 </div>
             </main>

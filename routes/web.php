@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function (): void {
         Route::post('/inventory/equip', [GameActionController::class, 'equip'])->name('inventory.equip');
         Route::post('/inventory/unequip', [GameActionController::class, 'unequip'])->name('inventory.unequip');
         Route::post('/inventory/sell', [GameActionController::class, 'sell'])->name('inventory.sell');
+        Route::post('/inventory/sellNonValuable', [GameActionController::class, 'sellNonValuable'])->name('inventory.sellNonValuable');
         Route::post('/inventory/use', [GameActionController::class, 'useItem'])->name('inventory.use');
     });
 });

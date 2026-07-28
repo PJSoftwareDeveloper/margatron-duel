@@ -123,7 +123,7 @@ final readonly class ItemFactory
     private function rollRarity(int $luckBonus, ?ArenaDifficulty $arenaDifficulty): ItemRarity
     {
         $chances = $this->catalog->baseDropChances();
-        $luckMod = sqrt($luckBonus)*2;
+        $luckMod = sqrt($luckBonus);
         $arenaBonus = $arenaDifficulty?->rarityBonus() ?? 0;
 
         $legendaryBonus = $chances[ItemRarity::Legendary->value] + ($luckMod * 0.1) + ($arenaBonus * 0.1);
